@@ -397,7 +397,8 @@
                 console.log('Payment page DOM loaded, starting initialization');
                 
                 // Extra safety check - only run payment JavaScript if we're actually on payment page
-                if (window.location.pathname !== '/payment') {
+                const normalizedPath = window.location.pathname.replace(/\/+$/, '');
+                if (!normalizedPath.endsWith('/payment')) {
                     console.log('Payment JavaScript attempted to run on wrong page:', window.location.pathname);
                     return;
                 }
