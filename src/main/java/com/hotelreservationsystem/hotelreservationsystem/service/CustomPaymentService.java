@@ -220,55 +220,40 @@ public class CustomPaymentService {
      * Validate booking for payment
      */
     public Map<String, Object> validateBookingForPayment(String bookingReference) {
+        Map<String, Object> result = new HashMap<>();
+
         try {
             Booking booking = bookingRepository.findByBookingReference(bookingReference)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));
-            return buildBookingValidationResponse(booking);
+
+            BigDecimal bookingTotal = resolveBookingTotalAmount(booking);
+
+            if (booking.getPaymentStatus() == PaymentStatus.COMPLETED) {
+                result.put("success", false);
+                result.put("error", "This booking has already been paid");
+                return result;
+            }
+
+            result.put("success", true);
+            result.put("bookingId", booking.getBookingId());
+            result.put("bookingReference", bookingReference);
+            result.put("customerName", booking.getCustomer().getUser().getFirstName() + " " +
+                                     booking.getCustomer().getUser().getLastName());
+            result.put("customerEmail", booking.getCustomer().getUser().getEmail());
+            result.put("roomNumber", booking.getRoom().getRoomNumber());
+            result.put("roomType", booking.getRoom().getRoomType().getTypeName());
+            result.put("checkInDate", booking.getCheckInDate().toString());
+            result.put("checkOutDate", booking.getCheckOutDate().toString());
+            result.put("numberOfNights", booking.getNumberOfNights());
+            result.put("numberOfGuests", booking.getNumberOfGuests());
+            result.put("amount", bookingTotal);
+
         } catch (Exception e) {
             Map<String, Object> result = new HashMap<>();
             result.put("success", false);
             result.put("error", e.getMessage());
             return result;
         }
-    }
-
-    public Map<String, Object> validateBookingForPayment(Long bookingId) {
-        try {
-            Booking booking = bookingRepository.findById(bookingId)
-                    .orElseThrow(() -> new RuntimeException("Booking not found"));
-            return buildBookingValidationResponse(booking);
-        } catch (Exception e) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", false);
-            result.put("error", e.getMessage());
-            return result;
-        }
-    }
-
-    private Map<String, Object> buildBookingValidationResponse(Booking booking) {
-        Map<String, Object> result = new HashMap<>();
-
-        BigDecimal bookingTotal = resolveBookingTotalAmount(booking);
-
-        if (booking.getPaymentStatus() == PaymentStatus.COMPLETED) {
-            result.put("success", false);
-            result.put("error", "This booking has already been paid");
-            return result;
-        }
-
-        result.put("success", true);
-        result.put("bookingId", booking.getBookingId());
-        result.put("bookingReference", booking.getBookingReference());
-        result.put("customerName", booking.getCustomer().getUser().getFirstName() + " " +
-                                 booking.getCustomer().getUser().getLastName());
-        result.put("customerEmail", booking.getCustomer().getUser().getEmail());
-        result.put("roomNumber", booking.getRoom().getRoomNumber());
-        result.put("roomType", booking.getRoom().getRoomType().getTypeName());
-        result.put("checkInDate", booking.getCheckInDate().toString());
-        result.put("checkOutDate", booking.getCheckOutDate().toString());
-        result.put("numberOfNights", booking.getNumberOfNights());
-        result.put("numberOfGuests", booking.getNumberOfGuests());
-        result.put("amount", bookingTotal);
 
         return result;
     }
@@ -306,10 +291,6 @@ public class CustomPaymentService {
         BigDecimal total = subtotal.add(serviceCharge).add(taxes);
 
         booking.setTotalAmount(total);
-
-        if (booking.getBookingId() != null) {
-            bookingRepository.save(booking);
-        }
 
         return total;
     }
