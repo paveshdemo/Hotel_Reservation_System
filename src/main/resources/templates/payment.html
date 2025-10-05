@@ -383,16 +383,50 @@
     
     <!-- Additional JavaScript for payment page -->
     <th:block th:fragment="additional-js">
-        <script>
+        <script th:inline="javascript">
             let currentBookingData = null;
             let selectedPaymentMethod = 'CREDIT_CARD';
-            
+
+            const appBaseUrl = /*[[${baseUrl}]]*/ '';
+            const contextPath = /*[[${contextPath}]]*/ '';
+            const resolvedBase = (appBaseUrl && appBaseUrl.trim())
+                ? appBaseUrl.trim()
+                : `${window.location.origin}${contextPath || ''}`;
+            const apiBaseUrl = (resolvedBase || window.location.origin).replace(/\/+$/, '');
+
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content
+                || document.querySelector('input[name="_csrf"]')?.value
+                || '';
+            const csrfHeaderName = document.querySelector('meta[name="_csrf_header"]')?.content
+                || 'X-CSRF-TOKEN';
+
+            function buildUrl(path = '') {
+                if (/^https?:\/\//i.test(path)) {
+                    return path;
+                }
+
+                const normalizedBase = apiBaseUrl.replace(/\/+$/, '');
+                const normalizedPath = path
+                    ? (path.startsWith('/') ? path : `/${path}`)
+                    : '';
+
+                return `${normalizedBase}${normalizedPath}`;
+            }
+
+            function getCsrfHeaders() {
+                const headers = {};
+                if (csrfToken) {
+                    headers[csrfHeaderName] = csrfToken;
+                }
+                return headers;
+            }
+
             // Global error handler
             window.addEventListener('error', function(e) {
                 console.error('JavaScript error on payment page:', e.error);
                 console.error('Error details:', e.filename, e.lineno, e.colno);
             });
-            
+
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('Payment page DOM loaded, starting initialization');
                 
@@ -402,75 +436,69 @@
                     console.log('Payment JavaScript attempted to run on wrong page:', window.location.pathname);
                     return;
                 }
-                
-                // Check if we have any indication that we should be on this page
+
                 const urlParams = new URLSearchParams(window.location.search);
                 const bookingId = urlParams.get('bookingId');
                 const pendingBooking = JSON.parse(sessionStorage.getItem('pendingBooking') || '{}');
-                
+
                 if (!bookingId && !pendingBooking.bookingId) {
                     console.log('Payment page accessed without valid booking data');
-                    
-                    // Check for redirect loop
+
                     const redirectCount = sessionStorage.getItem('redirectCount') || '0';
                     const lastPage = sessionStorage.getItem('lastPage');
-                    
+
                     if (lastPage === 'rooms' && parseInt(redirectCount) > 3) {
                         console.log('Detected redirect loop from payment page, breaking');
                         sessionStorage.clear();
                         alert('There seems to be a navigation issue. Please refresh the page and try again.');
                         return;
                     }
-                    
+
                     sessionStorage.setItem('lastPage', 'payment');
                     sessionStorage.setItem('redirectCount', String(parseInt(redirectCount) + 1));
-                    
+
                     console.log('Redirecting to rooms page');
-                    window.location.replace('/rooms');
+                    window.location.replace(buildUrl('/rooms'));
                     return;
                 }
-                
+
                 try {
                     loadBookingData();
                     initializePaymentMethods();
                 } catch (error) {
                     console.error('Error during payment page initialization:', error);
                 }
-                
-                // The payment button will be enabled by form validation in the custom payment system
             });
-            
+
             function loadBookingData() {
                 console.log('Payment page: loadBookingData called');
                 console.log('Payment page: Current URL:', window.location.href);
                 console.log('Payment page: Referrer:', document.referrer);
-                
-                // Get booking ID from URL or session storage
+
                 const urlParams = new URLSearchParams(window.location.search);
                 const bookingId = urlParams.get('bookingId');
-                
+
                 console.log('Payment page: bookingId from URL:', bookingId);
-                
+
                 if (bookingId) {
                     fetchBookingData(bookingId);
                 } else {
-                    // Try to get from session storage
                     const pendingBooking = JSON.parse(sessionStorage.getItem('pendingBooking') || '{}');
                     console.log('Payment page: pendingBooking from session:', pendingBooking);
-                    
+
                     if (pendingBooking.bookingId) {
                         fetchBookingData(pendingBooking.bookingId);
                     } else {
                         console.log('Payment page: No booking found in loadBookingData');
-                        // Don't show alert or redirect here as we already handled it above
-                        console.log('This should not happen if the pre-checks worked correctly');
                     }
                 }
             }
-            
+
             function fetchBookingData(bookingId) {
                 console.log('Payment page: Fetching booking data for ID:', bookingId);
-                fetch(`/api/bookings/${bookingId}`)
+                fetch(buildUrl(`/api/bookings/${encodeURIComponent(bookingId)}`), {
+                    credentials: 'same-origin'
+                })
                     .then(response => {
                         console.log('Payment page: API response status:', response.status);
                         if (!response.ok) {
@@ -490,13 +518,14 @@
                         showAlert('Error loading booking information. Please try again.', 'error');
                     });
             }
-            
+
             function displayBookingInfo(booking) {
                 document.getElementById('bookingInfoPlaceholder').style.display = 'none';
                 document.getElementById('bookingDetails').style.display = 'block';
-                
+
                 document.getElementById('bookingReference').textContent = booking.bookingReference;
-                document.getElementById('roomDetails').textContent = `${booking.roomNumber} (${booking.roomTypeName})`;
+                const roomTypeDisplay = booking.roomTypeName || booking.roomType || '-';
+                document.getElementById('roomDetails').textContent = `${booking.roomNumber} (${roomTypeDisplay})`;
                 document.getElementById('guestName').textContent = booking.customerName;
                 document.getElementById('checkInDisplay').textContent = formatDate(booking.checkInDate);
                 document.getElementById('checkOutDisplay').textContent = formatDate(booking.checkOutDate);
@@ -562,22 +591,24 @@
                 selectPaymentMethod('CREDIT_CARD');
                 setupCreditCardForm();
             }
-            
+
             function selectPaymentMethod(method) {
                 selectedPaymentMethod = method;
 
-                // Update UI
                 document.querySelectorAll('.payment-method-card').forEach(el => {
                     el.classList.remove('selected');
                 });
-                document.querySelector(`[data-method="${method}"]`).classList.add('selected');
-                
-                // Show/hide payment sections
+
+                const methodCard = document.querySelector(`[data-method="${method}"]`);
+                if (methodCard) {
+                    methodCard.classList.add('selected');
+                }
+
                 document.getElementById('creditCardPaymentSection').style.display = method === 'CREDIT_CARD' ? 'block' : 'none';
                 document.getElementById('bankTransferSection').style.display = method === 'BANK_TRANSFER' ? 'block' : 'none';
                 document.getElementById('cashPaymentSection').style.display = method === 'CASH' ? 'block' : 'none';
             }
-            
+
             function setupCreditCardForm() {
                 const form = document.getElementById('creditCardPaymentForm');
                 if (!form) return;
@@ -586,25 +617,22 @@
                 const cardNumberInput = document.getElementById('cardNumber');
                 const expiryDateInput = document.getElementById('expiryDate');
                 const cvvInput = document.getElementById('cvv');
-                
-                // Format card number with spaces
-                cardNumberInput.addEventListener('input', function(e) {
+
+                cardNumberInput?.addEventListener('input', function(e) {
                     let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
                     let formattedValue = value.match(/.{1,4}/g)?.join(' ') || '';
                     e.target.value = formattedValue;
                 });
-                
-                // Format expiry date with slash
-                expiryDateInput.addEventListener('input', function(e) {
+
+                expiryDateInput?.addEventListener('input', function(e) {
                     let value = e.target.value.replace(/\D/g, '');
                     if (value.length >= 2) {
                         value = value.substring(0, 2) + '/' + value.substring(2, 4);
                     }
                     e.target.value = value;
                 });
-                
-                // Restrict CVV to numbers only
-                cvvInput.addEventListener('input', function(e) {
+
+                cvvInput?.addEventListener('input', function(e) {
                     e.target.value = e.target.value.replace(/\D/g, '');
                 });
                 
@@ -634,7 +662,7 @@
                     }
                 });
             }
-            
+
             function processCustomPayment() {
                 if (!currentBookingData) {
                     showAlert('Booking information is missing. Please refresh the page and try again.', 'error');
@@ -664,23 +692,26 @@
                 // Show loading
                 document.getElementById('paymentProgress').style.display = 'block';
                 document.getElementById('payNowBtn').disabled = true;
-                
-                fetch('/api/custom-payment/process', {
+
+                fetch(buildUrl('/api/custom-payment/process'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value || ''
+                        ...getCsrfHeaders()
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify(paymentData)
                 })
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('paymentProgress').style.display = 'none';
-                    
+
                     if (data.success) {
                         showAlert('Payment successful! Redirecting to confirmation...', 'success');
                         setTimeout(() => {
-                            window.location.href = '/payment/success?order_id=' + data.bookingReference;
+                            const successUrl = new URL(buildUrl('/payment/success'));
+                            successUrl.searchParams.set('order_id', data.bookingReference || '');
+                            window.location.href = successUrl.toString();
                         }, 2000);
                     } else {
                         showAlert(data.error || 'Payment failed. Please try again.', 'error');
@@ -694,28 +725,29 @@
                     showAlert('Payment processing failed. Please try again.', 'error');
                 });
             }
-            
+
             function confirmBankTransfer() {
                 if (confirm('Please confirm that you will transfer the payment and send proof to our email. Your booking will be on hold until payment is verified.')) {
                     processAlternativePayment('BANK_TRANSFER');
                 }
             }
-            
+
             function confirmCashPayment() {
                 if (confirm('Please confirm that you will pay at the hotel during check-in. Your booking will be held for 24 hours from your arrival time.')) {
                     processAlternativePayment('CASH');
                 }
             }
-            
+
             function processAlternativePayment(paymentMethod) {
                 showLoading('Processing your booking...');
-                
-                fetch('/api/payment/alternative', {
+
+                fetch(buildUrl('/api/payment/alternative'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value || ''
+                        ...getCsrfHeaders()
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({
                         bookingId: currentBookingData.bookingId,
                         paymentMethod: paymentMethod
@@ -727,7 +759,9 @@
                     if (data.success) {
                         showAlert('Booking confirmed! You will receive a confirmation email shortly.', 'success');
                         setTimeout(() => {
-                            window.location.href = '/booking/confirmation?bookingId=' + currentBookingData.bookingId;
+                            const confirmationUrl = new URL(buildUrl('/booking/confirmation'));
+                            confirmationUrl.searchParams.set('bookingId', currentBookingData.bookingId);
+                            window.location.href = confirmationUrl.toString();
                         }, 2000);
                     } else {
                         showAlert(data.error || 'Error processing payment. Please try again.', 'error');
@@ -739,9 +773,7 @@
                     showAlert('Error processing payment. Please try again.', 'error');
                 });
             }
-            
-            // Custom payment form is handled in setupCreditCardForm function
-            
+
             function formatCurrency(amount) {
                 const numericAmount = toNumber(amount);
                 if (numericAmount === null) {
@@ -749,9 +781,7 @@
                 }
                 return `LKR ${numericAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             }
-            
-            // Test payment function removed - custom payment system handles validation internally
-            
+
             function formatDate(dateString) {
                 const date = new Date(dateString);
                 return date.toLocaleDateString('en-US', {
@@ -761,7 +791,7 @@
                     day: 'numeric'
                 });
             }
-            
+
             function formatDateShort(dateString) {
                 const date = new Date(dateString);
                 return date.toLocaleDateString('en-US', {
