@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,24 +53,23 @@ public class CustomPaymentService {
                 return result;
             }
 
-            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                result.put("success", false);
-                result.put("error", "Invalid payment amount");
-                return result;
-            }
-
             // Find booking
             Booking booking = bookingRepository.findByBookingReference(bookingReference)
                     .orElseThrow(() -> new RuntimeException("Booking not found: " + bookingReference));
 
-            BigDecimal bookingTotal = booking.getTotalAmount();
-            if (bookingTotal == null) {
-                throw new RuntimeException("Booking total amount is missing");
+            BigDecimal bookingTotal = resolveBookingTotalAmount(booking);
+
+            BigDecimal requestedAmount = amount;
+            if (requestedAmount == null || requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                requestedAmount = bookingTotal;
             }
 
             // Always charge the exact booking amount to prevent tampering
-            if (bookingTotal.compareTo(amount) != 0) {
-                System.out.println("Custom payment: Adjusting mismatched amount from " + amount + " to booking total " + bookingTotal);
+            if (bookingTotal.compareTo(requestedAmount) != 0) {
+                System.out.println(
+                        "Custom payment: Adjusting mismatched amount from " + requestedAmount +
+                        " to booking total " + bookingTotal
+                );
             }
 
             // Create payment record
@@ -107,7 +107,7 @@ public class CustomPaymentService {
             System.out.println("=== CUSTOM PAYMENT SUCCESSFUL ===");
             System.out.println("Booking: " + bookingReference);
             System.out.println("Payment Reference: " + payment.getPaymentReference());
-            System.out.println("Amount: " + amount);
+            System.out.println("Amount charged: " + bookingTotal);
             
         } catch (Exception e) {
             System.err.println("Custom payment processing error: " + e.getMessage());
@@ -199,12 +199,14 @@ public class CustomPaymentService {
         try {
             Booking booking = bookingRepository.findByBookingReference(bookingReference)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));
-            
+
+            BigDecimal bookingTotal = resolveBookingTotalAmount(booking);
+
             result.put("success", true);
             result.put("bookingReference", bookingReference);
             result.put("paymentStatus", booking.getPaymentStatus().toString());
             result.put("bookingStatus", booking.getBookingStatus().toString());
-            result.put("amount", booking.getTotalAmount());
+            result.put("amount", bookingTotal);
             
         } catch (Exception e) {
             result.put("success", false);
@@ -219,21 +221,23 @@ public class CustomPaymentService {
      */
     public Map<String, Object> validateBookingForPayment(String bookingReference) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
             Booking booking = bookingRepository.findByBookingReference(bookingReference)
                     .orElseThrow(() -> new RuntimeException("Booking not found"));
-            
+
+            BigDecimal bookingTotal = resolveBookingTotalAmount(booking);
+
             if (booking.getPaymentStatus() == PaymentStatus.COMPLETED) {
                 result.put("success", false);
                 result.put("error", "This booking has already been paid");
                 return result;
             }
-            
+
             result.put("success", true);
             result.put("bookingId", booking.getBookingId());
             result.put("bookingReference", bookingReference);
-            result.put("customerName", booking.getCustomer().getUser().getFirstName() + " " + 
+            result.put("customerName", booking.getCustomer().getUser().getFirstName() + " " +
                                      booking.getCustomer().getUser().getLastName());
             result.put("customerEmail", booking.getCustomer().getUser().getEmail());
             result.put("roomNumber", booking.getRoom().getRoomNumber());
@@ -242,13 +246,50 @@ public class CustomPaymentService {
             result.put("checkOutDate", booking.getCheckOutDate().toString());
             result.put("numberOfNights", booking.getNumberOfNights());
             result.put("numberOfGuests", booking.getNumberOfGuests());
-            result.put("amount", booking.getTotalAmount());
-            
+            result.put("amount", bookingTotal);
+
         } catch (Exception e) {
             result.put("success", false);
             result.put("error", e.getMessage());
         }
-        
+
         return result;
+    }
+
+    private BigDecimal resolveBookingTotalAmount(Booking booking) {
+        BigDecimal storedTotal = booking.getTotalAmount();
+        if (storedTotal != null && storedTotal.compareTo(BigDecimal.ZERO) > 0) {
+            return storedTotal;
+        }
+
+        BigDecimal roomPrice = booking.getRoomPricePerNight();
+        if (roomPrice == null && booking.getRoom() != null) {
+            roomPrice = booking.getRoom().getPricePerNight();
+        }
+
+        if (roomPrice == null || roomPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Booking total amount is missing");
+        }
+
+        int nights = booking.getNumberOfNights() != null ? booking.getNumberOfNights() : 0;
+        if (nights <= 0 && booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
+            long calculatedNights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
+            nights = (int) Math.max(calculatedNights, 1);
+        }
+        if (nights <= 0) {
+            nights = 1;
+        }
+
+        booking.setRoomPricePerNight(roomPrice);
+        booking.setNumberOfNights(nights);
+
+        BigDecimal subtotal = roomPrice.multiply(BigDecimal.valueOf(nights));
+        BigDecimal serviceCharge = subtotal.multiply(new BigDecimal("0.10"));
+        BigDecimal taxes = subtotal.multiply(new BigDecimal("0.02"));
+        BigDecimal total = subtotal.add(serviceCharge).add(taxes);
+
+        booking.setTotalAmount(total);
+
+        return total;
     }
 }
