@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
@@ -67,21 +67,52 @@ public class CustomPaymentController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> validateBooking(@PathVariable String bookingReference) {
         System.out.println("Validating booking for payment: " + bookingReference);
-        
+
         try {
             Map<String, Object> result = customPaymentService.validateBookingForPayment(bookingReference);
-            
+
             if ((Boolean) result.get("success")) {
                 return ResponseEntity.ok(result);
             } else {
                 return ResponseEntity.badRequest().body(result);
             }
-            
+
         } catch (Exception e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("error", "Validation failed: " + e.getMessage());
-            
+
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/validate")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> validateBookingByQuery(
+            @RequestParam(value = "bookingReference", required = false) String bookingReference,
+            @RequestParam(value = "bookingId", required = false) Long bookingId) {
+
+        if ((bookingReference == null || bookingReference.isBlank()) && bookingId == null) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "A booking reference or booking ID must be provided");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        try {
+            Map<String, Object> result = bookingReference != null && !bookingReference.isBlank()
+                    ? customPaymentService.validateBookingForPayment(bookingReference)
+                    : customPaymentService.validateBookingForPayment(bookingId);
+
+            if ((Boolean) result.get("success")) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.badRequest().body(result);
+            }
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "Validation failed: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
@@ -128,7 +159,7 @@ public class CustomPaymentController {
         @Size(min = 2, max = 50, message = "Cardholder name must be between 2 and 50 characters")
         private String cardholderName;
         
-        @NotNull(message = "Amount is required")
+        @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than zero")
         private BigDecimal amount;
         
         // Getters and Setters

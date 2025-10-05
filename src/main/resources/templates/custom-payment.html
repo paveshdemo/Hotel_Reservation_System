@@ -160,14 +160,21 @@
             
             function loadBookingDetails() {
                 const urlParams = new URLSearchParams(window.location.search);
-                const bookingReference = urlParams.get('booking');
-                
-                if (!bookingReference) {
+                const bookingReference = urlParams.get('booking')
+                    || urlParams.get('bookingReference')
+                    || urlParams.get('order_id');
+                const bookingId = urlParams.get('bookingId');
+
+                if (!bookingReference && !bookingId) {
                     showError('No booking reference provided');
                     return;
                 }
-                
-                fetch(`/api/custom-payment/validate/${bookingReference}`)
+
+                const query = bookingReference
+                    ? `bookingReference=${encodeURIComponent(bookingReference)}`
+                    : `bookingId=${encodeURIComponent(bookingId)}`;
+
+                fetch(`/api/custom-payment/validate?${query}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
