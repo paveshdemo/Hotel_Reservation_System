@@ -397,7 +397,8 @@
                 console.log('Payment page DOM loaded, starting initialization');
                 
                 // Extra safety check - only run payment JavaScript if we're actually on payment page
-                if (window.location.pathname !== '/payment') {
+                const normalizedPath = window.location.pathname.replace(/\/+$/, '');
+                if (!normalizedPath.endsWith('/payment')) {
                     console.log('Payment JavaScript attempted to run on wrong page:', window.location.pathname);
                     return;
                 }
@@ -502,45 +503,61 @@
                 document.getElementById('durationDisplay').textContent = `${booking.numberOfNights} night${booking.numberOfNights !== 1 ? 's' : ''}`;
             }
             
+            function toNumber(value) {
+                if (typeof value === 'number') {
+                    return value;
+                }
+
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : null;
+            }
+
             function displayPaymentSummary(booking) {
                 document.getElementById('paymentSummaryPlaceholder').style.display = 'none';
                 document.getElementById('paymentSummaryDetails').style.display = 'block';
-                
-                const subtotal = booking.roomPricePerNight * booking.numberOfNights;
+
+                const roomPricePerNight = toNumber(booking.roomPricePerNight) ?? 0;
+                const nights = toNumber(booking.numberOfNights) ?? 0;
+                const subtotal = roomPricePerNight * nights;
                 const serviceCharge = subtotal * 0.10;
                 const taxes = subtotal * 0.02;
-                
-                document.getElementById('summaryRoomType').textContent = booking.roomTypeName;
+
+                document.getElementById('summaryRoomType').textContent = booking.roomTypeName || booking.roomType || '-';
                 document.getElementById('summaryDates').textContent = `${formatDateShort(booking.checkInDate)} - ${formatDateShort(booking.checkOutDate)}`;
                 document.getElementById('summaryGuests').textContent = `${booking.numberOfGuests} guest${booking.numberOfGuests !== 1 ? 's' : ''}`;
                 document.getElementById('summaryNights').textContent = `${booking.numberOfNights} night${booking.numberOfNights !== 1 ? 's' : ''}`;
-                document.getElementById('summaryRoomRate').textContent = `${formatCurrency(booking.roomPricePerNight)} × ${booking.numberOfNights}`;
+                document.getElementById('summaryRoomRate').textContent = `${formatCurrency(roomPricePerNight)} × ${booking.numberOfNights}`;
                 document.getElementById('summarySubtotal').textContent = formatCurrency(subtotal);
                 document.getElementById('summaryServiceCharge').textContent = formatCurrency(serviceCharge);
                 document.getElementById('summaryTaxes').textContent = formatCurrency(taxes);
-                document.getElementById('summaryTotal').textContent = formatCurrency(booking.totalAmount);
-                
+                document.getElementById('summaryTotal').textContent = formatCurrency(toNumber(booking.totalAmount));
+
                 // Update all amount displays
-                document.getElementById('paymentAmount').textContent = formatCurrency(booking.totalAmount);
-                document.getElementById('bankTransferAmount').textContent = formatCurrency(booking.totalAmount);
-                document.getElementById('cashPaymentAmount').textContent = formatCurrency(booking.totalAmount);
+                document.getElementById('paymentAmount').textContent = formatCurrency(toNumber(booking.totalAmount));
+                document.getElementById('bankTransferAmount').textContent = formatCurrency(toNumber(booking.totalAmount));
+                document.getElementById('cashPaymentAmount').textContent = formatCurrency(toNumber(booking.totalAmount));
                 document.getElementById('bankTransferReference').textContent = booking.bookingReference;
                 document.getElementById('cashPaymentReference').textContent = booking.bookingReference;
             }
-            
+
             function setupPaymentForm(booking) {
                 console.log('Payment page: Setting up custom payment form with booking:', booking);
-                
+
                 // Setup custom payment form
                 document.getElementById('bookingReferenceField').value = booking.bookingReference;
-                document.getElementById('paymentAmountField').value = booking.totalAmount.toFixed(2);
-                
+                const totalAmountNumber = toNumber(booking.totalAmount);
+                if (totalAmountNumber !== null) {
+                    document.getElementById('paymentAmountField').value = totalAmountNumber.toFixed(2);
+                } else {
+                    document.getElementById('paymentAmountField').value = '';
+                }
+
                 console.log('Payment page: Custom payment form fields populated');
-                
+
                 // Payment button will be enabled by form validation
                 console.log('Payment page: Payment form ready');
             }
-            
+
             function initializePaymentMethods() {
                 selectPaymentMethod('CREDIT_CARD');
                 setupCreditCardForm();
@@ -564,7 +581,7 @@
             function setupCreditCardForm() {
                 const form = document.getElementById('creditCardPaymentForm');
                 if (!form) return;
-                
+
                 // Add input formatting
                 const cardNumberInput = document.getElementById('cardNumber');
                 const expiryDateInput = document.getElementById('expiryDate');
@@ -591,14 +608,22 @@
                     e.target.value = e.target.value.replace(/\D/g, '');
                 });
                 
-                // Enable/disable pay button based on form validity
-                form.addEventListener('input', function() {
-                    const payBtn = document.getElementById('payNowBtn');
-                    const termsCheckbox = document.getElementById('termsAccepted');
-                    const isValid = form.checkValidity() && termsCheckbox.checked;
+                const termsCheckbox = document.getElementById('termsAccepted');
+                const payBtn = document.getElementById('payNowBtn');
+
+                function updatePayButtonState() {
+                    const isValid = form.checkValidity() && termsCheckbox?.checked;
                     payBtn.disabled = !isValid;
-                });
-                
+                }
+
+                // Enable/disable pay button based on form validity
+                form.addEventListener('input', updatePayButtonState);
+                form.addEventListener('change', updatePayButtonState);
+                termsCheckbox?.addEventListener('change', updatePayButtonState);
+
+                // Ensure correct initial state once listeners are in place
+                updatePayButtonState();
+
                 // Handle form submission
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -611,18 +636,31 @@
             }
             
             function processCustomPayment() {
+                if (!currentBookingData) {
+                    showAlert('Booking information is missing. Please refresh the page and try again.', 'error');
+                    return;
+                }
+
                 const form = document.getElementById('creditCardPaymentForm');
                 const formData = new FormData(form);
-                
+
+                const rawAmount = currentBookingData.totalAmount;
+                const numericAmount = toNumber(rawAmount);
+
+                if (numericAmount === null || numericAmount <= 0) {
+                    showAlert('Invalid booking amount. Please contact support.', 'error');
+                    return;
+                }
+
                 const paymentData = {
                     bookingReference: currentBookingData.bookingReference,
                     cardNumber: formData.get('cardNumber'),
                     expiryDate: formData.get('expiryDate'),
                     cvv: formData.get('cvv'),
                     cardholderName: formData.get('cardholderName'),
-                    amount: currentBookingData.totalAmount
+                    amount: numericAmount
                 };
-                
+
                 // Show loading
                 document.getElementById('paymentProgress').style.display = 'block';
                 document.getElementById('payNowBtn').disabled = true;
@@ -705,7 +743,11 @@
             // Custom payment form is handled in setupCreditCardForm function
             
             function formatCurrency(amount) {
-                return `LKR ${amount.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                const numericAmount = toNumber(amount);
+                if (numericAmount === null) {
+                    return 'LKR 0.00';
+                }
+                return `LKR ${numericAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             }
             
             // Test payment function removed - custom payment system handles validation internally
