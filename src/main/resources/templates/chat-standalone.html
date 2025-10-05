@@ -5,45 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <title>Hotel Booking Assistant - Chat</title>
+    <title>AI Booking Assistant - Golden Palm Hotel</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            /* Golden Palm Hotel Design System */
+            --bg-primary: #0a0e17;
+            --bg-secondary: #13182a;
+            --bg-card: rgba(30, 41, 59, 0.6);
+            --bg-card-hover: rgba(30, 41, 59, 0.8);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-primary: rgba(255, 215, 0, 0.2);
+            --accent-primary: #ffd700;
+            --accent-secondary: #ffed4e;
+            --gradient-primary: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            --gradient-secondary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            --gradient-dark: linear-gradient(135deg, #0a0e17 0%, #1e293b 100%);
+            --gradient-card: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(51, 65, 85, 0.6) 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.3);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+            --radius-full: 9999px;
         }
 
+        body {
+            background: var(--gradient-dark);
+            min-height: 100vh;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1rem 0;
+            background: var(--gradient-card);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-primary);
+            box-shadow: var(--shadow-xl);
+            padding: 1.5rem 0;
             margin-bottom: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .header .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
         .nav-actions a {
-            margin-left: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-full);
             text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
+        .nav-actions .btn-outline-primary {
+            color: var(--text-secondary);
+            border-color: var(--border-primary);
+        }
+
+        .nav-actions .btn-outline-primary:hover {
+            border-color: var(--accent-primary);
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .nav-actions .btn-primary {
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
+            font-weight: 700;
+            box-shadow: var(--shadow-md), var(--shadow-glow);
+        }
+
+        .nav-actions .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Main Container */
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -51,47 +132,52 @@
         }
 
         .chat-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
+            background: var(--gradient-card);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border-primary);
             overflow: hidden;
+            margin-bottom: 2rem;
         }
 
         .chat-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 1.5rem;
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
+            padding: 2rem;
             text-align: center;
         }
 
         .chat-header h1 {
             margin: 0;
-            font-size: 1.8rem;
-            font-weight: 600;
+            font-size: 2rem;
+            font-weight: 800;
         }
 
         .chat-header p {
-            margin: 0.5rem 0 0 0;
+            margin: 1rem 0 0 0;
             opacity: 0.9;
+            font-size: 1.1rem;
         }
 
+        /* Chat Messages */
         .chat-messages {
             height: 500px;
             overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fa;
+            padding: 2rem;
+            background: var(--bg-card);
         }
 
         .message {
-            margin-bottom: 15px;
-            animation: fadeInUp 0.3s ease-out;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.5s ease-out;
         }
 
         .message-content {
             display: flex;
             align-items: flex-start;
-            gap: 10px;
+            gap: 1rem;
+            position: relative;
         }
 
         .user-message .message-content {
@@ -99,79 +185,92 @@
         }
 
         .message-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 1.25rem;
             flex-shrink: 0;
+            box-shadow: var(--shadow-md);
         }
 
         .bot-message .message-avatar {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
         }
 
         .user-message .message-avatar {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
+            background: var(--gradient-secondary);
+            color: var(--bg-primary);
         }
 
         .user-message .message-avatar::before {
             content: "👤";
+            font-size: 1.125rem;
         }
 
         .message-bubble {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 20px;
+            max-width: 75%;
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius-2xl);
             word-wrap: break-word;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
         }
 
         .bot-message .message-bubble {
-            background: white;
-            border-bottom-left-radius: 5px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-primary);
+            border-bottom-left-radius: 8px;
         }
 
         .user-message .message-bubble {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-bottom-right-radius: 5px;
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
+            border-bottom-right-radius: 8px;
+            border: 2px solid var(--accent-primary);
         }
 
         .message-bubble p {
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.6;
+            color: inherit;
         }
 
         .message-bubble p:not(:last-child) {
-            margin-bottom: 10px;
+            margin-bottom: 1rem;
         }
 
-        /* Typing indicator */
+        /* Typing Indicator */
         .typing-dots {
             display: flex;
-            gap: 4px;
-            padding: 15px 0;
+            gap: 6px;
+            padding: 1rem 0;
         }
 
         .typing-dots span {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #667eea;
+            background: var(--accent-primary);
             animation: typing 1.4s infinite ease-in-out;
         }
 
         .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
         .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0s; }
 
         @keyframes typing {
-            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-            40% { transform: scale(1.2); opacity: 1; }
+            0%, 80%, 100% { 
+                transform: scale(0.8); 
+                opacity: 0.5; 
+            }
+            40% { 
+                transform: scale(1.2); 
+                opacity: 1; 
+            }
         }
 
         @keyframes fadeInUp {
@@ -185,104 +284,145 @@
             }
         }
 
+        /* Chat Input Area */
         .chat-input-area {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #e9ecef;
+            padding: 2rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-primary);
         }
 
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--radius-full);
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .input-group:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2);
         }
 
         #chat-input {
-            border-radius: 25px;
-            border: 2px solid #e9ecef;
-            padding: 12px 20px;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            outline: none;
         }
 
-        #chat-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        #chat-input::placeholder {
+            color: var(--text-muted);
         }
 
         #send-button {
-            border-radius: 25px;
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 45px;
+            height: 45px;
+            background: var(--gradient-primary);
             border: none;
-            font-weight: 600;
+            border-radius: 50%;
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            margin-left: 0.5rem;
         }
 
         #send-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: scale(1.1);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
 
+        #send-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Quick Actions */
         .quick-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
         }
 
         .quick-action {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            color: #667eea;
-            padding: 8px 15px;
-            border-radius: 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            color: var(--text-primary);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-lg);
             font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s ease;
+            text-align: center;
         }
 
         .quick-action:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-1px);
+            border-color: var(--accent-primary);
+            background: var(--bg-card-hover);
+            color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
+        /* Room Cards */
         .room-card {
-            border: 2px solid #e9ecef;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-            background: white;
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .room-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.15);
+            border-color: var(--accent-primary);
+            background: var(--bg-card-hover);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .room-card.selected {
-            border-color: #28a745;
-            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+            border-color: var(--accent-primary);
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 215, 0, 0.2);
         }
 
         .room-price {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #28a745;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin: 0.5rem 0;
         }
 
         .select-room-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--gradient-primary);
             border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 600;
+            color: var(--bg-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: var(--shadow-md), var(--shadow-glow);
+            width: 100%;
+            margin-top: 1rem;
         }
 
         .select-room-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(255, 215, 0, 0.4);
         }
 
         .booking-form {
@@ -318,47 +458,144 @@
             margin-top: 20px;
         }
 
+        /* Sidebar Panels */
         .sidebar-panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: var(--gradient-card);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--radius-2xl);
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-panel:hover {
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-xl), 0 0 30px rgba(255, 215, 0, 0.15);
         }
 
         .panel-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 15px 15px 0 0;
-            font-weight: 600;
+            background: var(--gradient-primary);
+            color: var(--bg-primary);
+            padding: 1.5rem;
+            font-weight: 700;
         }
 
         .panel-body {
-            padding: 20px;
+            padding: 1.5rem;
         }
 
-        /* Scrollbar styling */
+        /* Form Controls */
+        .form-control {
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2);
+            background: var(--bg-card-hover);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn-success {
+            background: var(--gradient-primary);
+            border: none;
+            color: var(--bg-primary);
+            padding: 1rem 2rem;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md), var(--shadow-glow);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Scrollbar Styling */
         .chat-messages::-webkit-scrollbar {
             width: 8px;
         }
 
         .chat-messages::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+            background: var(--bg-card-hover);
+            border-radius: 4px;
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 10px;
+            background: var(--accent-primary);
+            border-radius: 4px;
+            opacity: 0.7;
         }
 
         .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a42a6);
+            opacity: 1;
         }
 
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
+            .header .navbar {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .nav-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
             .main-container {
                 padding: 0 0.5rem;
+            }
+            
+            .chat-header {
+                padding: 1.5rem;
+            }
+            
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .chat-messages {
+                height: 400px;
+                padding: 1.5rem;
+            }
+            
+            .chat-input-area {
+                padding: 1.5rem;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
             }
             
             .col-lg-8, .col-lg-4 {
@@ -367,6 +604,27 @@
             
             .message-bubble {
                 max-width: 85%;
+                padding: 1rem 1.25rem;
+            }
+            
+            .panel-header,
+            .panel-body {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-header h1 {
+                font-size: 1.25rem;
+            }
+            
+            .chat-messages {
+                height: 350px;
+                padding: 1rem;
+            }
+            
+            .chat-input-area {
+                padding: 1rem;
             }
         }
     </style>
@@ -374,16 +632,23 @@
 <body>
     <!-- Header -->
     <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">🏨 Hotel Reservation</a>
-                <div class="nav-actions">
-                    <a href="/" class="btn btn-outline-primary">🏠 Home</a>
-                    <a href="/rooms" class="btn btn-outline-primary">🛏️ Rooms</a>
-                    <a href="/auth/login" class="btn btn-primary">👤 Login</a>
-                </div>
-            </nav>
-        </div>
+        <nav class="navbar">
+            <a href="/" class="logo">
+                <i class="fas fa-crown"></i>
+                Golden Palm Hotel
+            </a>
+            <div class="nav-actions">
+                <a href="/" class="btn btn-outline-primary">
+                    <i class="fas fa-home me-2"></i>Home
+                </a>
+                <a href="/rooms" class="btn btn-outline-primary">
+                    <i class="fas fa-bed me-2"></i>Rooms
+                </a>
+                <a href="/auth/login" class="btn btn-primary">
+                    <i class="fas fa-user me-2"></i>Login
+                </a>
+            </div>
+        </nav>
     </header>
 
     <!-- Main Content -->
@@ -393,8 +658,8 @@
             <div class="col-lg-8">
                 <div class="chat-container">
                     <div class="chat-header">
-                        <h1>🤖 Hotel Booking Assistant</h1>
-                        <p>Ask me about room availability, pricing, and bookings!</p>
+                        <h1><i class="fas fa-robot me-3"></i>AI Booking Assistant</h1>
+                        <p>Get instant help with room bookings, availability, and hotel information from <strong>Golden Palm Hotel</strong></p>
                     </div>
                     
                     <!-- Chat Messages -->
@@ -404,8 +669,8 @@
                             <div class="message-content">
                                 <div class="message-avatar">🤖</div>
                                 <div class="message-bubble">
-                                    <p sec:authorize="isAuthenticated()">Hello, <span sec:authentication="name">User</span>! 🏨 Welcome back to Gold Palm Hotel! I'm here to help you with your bookings and room inquiries. How can I assist you today?</p>
-                                    <p sec:authorize="isAnonymous()">Hello! 🏨 Welcome to Gold Palm Hotel! I'm here to help you find the perfect room for your stay. How can I assist you today?</p>
+                                    <p sec:authorize="isAuthenticated()">Hello, <span sec:authentication="name">User</span>! 🏨 Welcome back to <strong>Golden Palm Hotel</strong>! I'm your AI booking assistant, here to help you with your bookings and room inquiries. How can I assist you today?</p>
+                                    <p sec:authorize="isAnonymous()">Hello! 🏨 Welcome to <strong>Golden Palm Hotel</strong>! I'm your AI booking assistant, here to help you find the perfect room for your stay. How can I assist you today?</p>
                                 </div>
                             </div>
                         </div>
@@ -439,24 +704,24 @@
                         <!-- Quick Action Buttons -->
                         <div class="quick-actions">
                             <button class="btn quick-action" data-message="I want to book a room">
-                                🏨 Book a Room
+                                <i class="fas fa-bed me-2"></i>Book Room
                             </button>
                             <button class="btn quick-action" data-message="Show me available rooms">
-                                🛏️ Available Rooms
+                                <i class="fas fa-calendar-check me-2"></i>Check Availability
                             </button>
                             <button class="btn quick-action" data-message="What are your room types and prices?">
-                                💰 Room Prices
+                                <i class="fas fa-tags me-2"></i>Room Prices
                             </button>
                             <button class="btn quick-action" data-message="What amenities do you offer?">
-                                ✨ Amenities
+                                <i class="fas fa-star me-2"></i>Amenities
                             </button>
                             <!-- Additional buttons for authenticated users -->
                             <th:block sec:authorize="isAuthenticated()">
                                 <button class="btn quick-action" data-message="Show me my recent bookings">
-                                    📋 My Bookings
+                                    <i class="fas fa-clipboard-list me-2"></i>My Bookings
                                 </button>
                                 <button class="btn quick-action" data-message="I need help with my existing booking">
-                                    🔧 Booking Help
+                                    <i class="fas fa-tools me-2"></i>Booking Help
                                 </button>
                             </th:block>
                         </div>
@@ -469,7 +734,7 @@
                 <!-- Room Suggestions -->
                 <div id="room-suggestions-panel" class="sidebar-panel" style="display: none;">
                     <div class="panel-header">
-                        <h5 class="mb-0">🏨 Available Rooms</h5>
+                        <h5 class="mb-0"><i class="fas fa-bed me-2"></i>Available Rooms</h5>
                     </div>
                     <div class="panel-body">
                         <div id="room-suggestions">
@@ -481,7 +746,7 @@
                 <!-- Booking Form -->
                 <div id="booking-form-panel" class="sidebar-panel" style="display: none;">
                     <div class="panel-header">
-                        <h5 class="mb-0">✅ Complete Booking</h5>
+                        <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Complete Booking</h5>
                     </div>
                     <div class="panel-body">
                         <form id="booking-form" class="booking-form">
@@ -503,7 +768,7 @@
                                           placeholder="Any special requirements or preferences..."></textarea>
                             </div>
                             <button type="submit" class="btn btn-success w-100">
-                                🎯 Confirm Booking
+                                <i class="fas fa-check-circle me-2"></i>Confirm Booking
                             </button>
                         </form>
                     </div>
@@ -512,23 +777,38 @@
                 <!-- Help Panel -->
                 <div class="sidebar-panel">
                     <div class="panel-header">
-                        <h5 class="mb-0">💡 Need Help?</h5>
+                        <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Need Help?</h5>
                     </div>
                     <div class="panel-body">
                         <p class="text-muted">I can help you with:</p>
-                        <ul class="text-muted">
-                            <li>Check room availability</li>
-                            <li>Get room details and pricing</li>
-                            <li>Make reservations</li>
-                            <li>Answer hotel questions</li>
-                        </ul>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-calendar-check text-warning me-2"></i>
+                                <span>Check room availability</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-info-circle text-warning me-2"></i>
+                                <span>Get room details and pricing</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-bookmark text-warning me-2"></i>
+                                <span>Make reservations</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-comments text-warning me-2"></i>
+                                <span>Answer hotel questions</span>
+                            </div>
+                        </div>
                         
                         <hr>
                         
-                        <div class="text-center">
-                            <strong>🆘 Need immediate help?</strong><br>
-                            <a href="tel:0114545678" class="btn btn-danger btn-sm mt-2">
-                                📞 Call 011-4545678
+                        <div class="text-center p-3" style="background: rgba(255, 215, 0, 0.1); border: 2px solid var(--accent-primary); border-radius: var(--radius-lg);">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="fas fa-phone-alt text-warning me-2"></i>
+                                <strong>Need immediate help?</strong>
+                            </div>
+                            <a href="tel:0114545678" class="btn btn-warning fw-bold">
+                                <i class="fas fa-phone me-2"></i>011-4545678
                             </a>
                         </div>
                         
@@ -536,13 +816,15 @@
                         <th:block sec:authorize="isAuthenticated()">
                             <hr>
                             <div class="text-center">
-                                <strong>🔗 Quick Links</strong><br>
-                                <a href="/dashboard" class="btn btn-outline-primary btn-sm mt-1">
-                                    🏠 Dashboard
-                                </a>
-                                <a href="/my-bookings" class="btn btn-outline-secondary btn-sm mt-1">
-                                    📋 My Bookings
-                                </a>
+                                <strong><i class="fas fa-link me-2"></i>Quick Links</strong><br>
+                                <div class="d-grid gap-2 mt-2">
+                                    <a href="/dashboard" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                    </a>
+                                    <a href="/my-bookings" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-clipboard-list me-2"></i>My Bookings
+                                    </a>
+                                </div>
                             </div>
                         </th:block>
                     </div>

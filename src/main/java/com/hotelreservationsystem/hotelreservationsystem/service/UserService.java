@@ -181,6 +181,22 @@ public class UserService implements UserDetailsService {
             customerProfile.setUpdatedAt(LocalDateTime.now());
             customerRepository.save(customerProfile);
         }
+
+        // Create receptionist/staff user if not exists
+        if (!existsByEmail("receptionist@hotel.com")) {
+            User receptionist = new User();
+            receptionist.setUsername("receptionist");
+            receptionist.setEmail("receptionist@hotel.com");
+            receptionist.setPasswordHash(passwordEncoder.encode("receptionist123"));
+            receptionist.setFirstName("Sarah");
+            receptionist.setLastName("Johnson");
+            receptionist.setRole(UserRole.STAFF);
+            receptionist.setIsActive(true);
+            receptionist.setEmailVerified(true);
+            receptionist.setCreatedAt(LocalDateTime.now());
+            receptionist.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(receptionist);
+        }
     }
 
     // Placeholder methods for password reset functionality

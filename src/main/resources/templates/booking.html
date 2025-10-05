@@ -5,19 +5,36 @@
 </head>
 <body>
     <div th:fragment="content">
-        <div class="container">
-            <!-- Page Header -->
-            <section class="mt-2 mb-3 text-center">
-                <h1>📅 Complete Your Booking</h1>
-                <p>You're just one step away from confirming your reservation</p>
-            </section>
+        <!-- Hero Section -->
+        <section class="hero-section" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/banner/booking.jpg') center/cover no-repeat;">
+            <div class="container">
+                <div class="text-center">
+                    <div class="fade-in-up">
+                        <h1 class="display-4 mb-6 text-golden">
+                            <i class="fas fa-calendar-check me-3"></i>
+                            Complete Your Booking
+                        </h1>
+                    </div>
+                    <div class="fade-in-up" style="animation-delay: 0.2s;">
+                        <p class="lead mb-8">
+                            You're just one step away from confirming your reservation at Golden Palm Hotel
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container py-5">
             
             <!-- Booking Container -->
             <div class="booking-container">
                 <!-- Main Booking Form -->
-                <div class="card">
+                <div class="card shadow-glow">
                     <div class="card-header">
-                        <h2>🏨 Booking Details</h2>
+                        <h2 class="mb-0">
+                            <i class="fas fa-hotel text-golden me-3"></i>
+                            Booking Details
+                        </h2>
                     </div>
                     <div class="card-body">
                         <form id="bookingForm" th:action="@{/booking/submit}" method="post" data-validate="true">
@@ -30,18 +47,25 @@
                             
                             <!-- Room Selection Display -->
                             <div class="form-group">
-                                <h3>Selected Room</h3>
-                                <div id="selectedRoomDisplay" class="card">
+                                <h3 class="text-golden mb-3">
+                                    <i class="fas fa-bed me-2"></i>Selected Room
+                                </h3>
+                                <div id="selectedRoomDisplay" class="card border">
                                     <div class="card-body">
                                         <div id="roomSelectionPlaceholder">
-                                            <p class="text-center">🏨 Please select a room from the <a href="/rooms">rooms page</a> first</p>
+                                            <p class="text-center mb-0">
+                                                <i class="fas fa-info-circle text-golden me-2"></i>
+                                                Please select a room from the <a href="/rooms" class="text-golden">rooms page</a> first
+                                            </p>
                                         </div>
                                         <div id="selectedRoomInfo" style="display: none;">
-                                            <h4 id="selectedRoomType">Room Type</h4>
-                                            <p><strong>Room Number:</strong> <span id="selectedRoomNumber">-</span></p>
-                                            <p><strong>Price per night:</strong> <span id="roomPricePerNight">-</span></p>
-                                            <p><strong>Max Occupancy:</strong> <span id="selectedMaxOccupancy">-</span></p>
-                                            <button type="button" class="btn btn-secondary" onclick="changeRoom()">🔄 Change Room</button>
+                                            <h4 id="selectedRoomType" class="text-golden">Room Type</h4>
+                                            <p><strong><i class="fas fa-door-open me-2 text-golden"></i>Room Number:</strong> <span id="selectedRoomNumber">-</span></p>
+                                            <p><strong><i class="fas fa-rupee-sign me-2 text-golden"></i>Price per night:</strong> <span id="roomPricePerNight">-</span></p>
+                                            <p><strong><i class="fas fa-users me-2 text-golden"></i>Max Occupancy:</strong> <span id="selectedMaxOccupancy">-</span></p>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="changeRoom()">
+                                                <i class="fas fa-sync-alt me-2"></i>Change Room
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -49,7 +73,7 @@
                             
                             <!-- Stay Details -->
                             <div class="form-group">
-                                <h3>Stay Details</h3>
+                                <h3 class="text-golden mb-3"><i class="fas fa-calendar-alt me-2"></i>Stay Details</h3>
                                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div>
                                         <label for="checkInDate">Check-in Date <span style="color: red;">*</span></label>
@@ -90,7 +114,7 @@
                             
                             <!-- Guest Information -->
                             <div class="form-group">
-                                <h3>Primary Guest Information</h3>
+                                <h3 class="text-golden mb-3"><i class="fas fa-user-circle me-2"></i>Primary Guest Information</h3>
                                 <div class="alert alert-info">
                                     <small>This information will be used for the reservation. Make sure it matches your ID.</small>
                                 </div>
@@ -149,7 +173,7 @@
                             
                             <!-- Special Requests -->
                             <div class="form-group">
-                                <h3>Special Requests & Preferences</h3>
+                                <h3 class="text-golden mb-3"><i class="fas fa-star me-2"></i>Special Requests & Preferences</h3>
                                 <div>
                                     <label for="specialRequests">Special Requests (Optional)</label>
                                     <textarea id="specialRequests" 
@@ -172,7 +196,7 @@
                             
                             <!-- Arrival Information -->
                             <div class="form-group">
-                                <h3>Arrival Information</h3>
+                                <h3 class="text-golden mb-3"><i class="fas fa-plane-arrival me-2"></i>Arrival Information</h3>
                                 <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div>
                                         <label for="estimatedArrivalTime">Estimated Arrival Time</label>
@@ -207,7 +231,7 @@
                             
                             <!-- Terms and Conditions -->
                             <div class="form-group">
-                                <h3>Terms & Conditions</h3>
+                                <h3 class="text-golden mb-3"><i class="fas fa-file-contract me-2"></i>Terms & Conditions</h3>
                                 <div class="card">
                                     <div class="card-body">
                                         <div style="max-height: 150px; overflow-y: auto; font-size: 0.9rem; line-height: 1.4;">
@@ -250,7 +274,7 @@
                             <!-- Submit Button -->
                             <div class="form-group">
                                 <button type="submit" id="submitBookingBtn" class="btn btn-success form-control" disabled>
-                                    💳 Proceed to Payment
+                                    <i class="fas fa-credit-card me-2"></i>Proceed to Payment
                                 </button>
                                 <p class="text-center mt-2" style="font-size: 0.9rem; color: #666;">
                                     You'll be redirected to secure PayHere payment gateway
@@ -262,7 +286,7 @@
                 
                 <!-- Booking Summary Sidebar -->
                 <div class="booking-summary">
-                    <h3>📋 Booking Summary</h3>
+                    <h3 class="text-golden mb-3"><i class="fas fa-clipboard-list me-2"></i>Booking Summary</h3>
                     
                     <div id="summaryContent">
                         <div id="summaryPlaceholder" class="text-center">

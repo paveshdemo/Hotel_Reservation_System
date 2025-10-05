@@ -78,6 +78,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index", "/home").permitAll()
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
                         .requestMatchers("/rooms").permitAll()
+                        .requestMatchers("/promotions", "/promotions/**").permitAll()
                         .requestMatchers("/chat").permitAll()
                         .requestMatchers("/error").permitAll()
 
@@ -88,6 +89,9 @@ public class SecurityConfig {
                         .requestMatchers("/dashboard/**").authenticated()
                         .requestMatchers("/booking/**").authenticated()
                         .requestMatchers("/payment/**").authenticated()
+                        .requestMatchers("/reviews/**").authenticated()
+                        .requestMatchers("/my-bookings").authenticated()
+                        .requestMatchers("/profile").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/receptionist/**").hasRole("STAFF")
 
@@ -138,7 +142,8 @@ public class SecurityConfig {
                                         "img-src 'self' data: " +
                                         "https://www.google-analytics.com; " +
                                         "connect-src 'self' " +
-                                        "https://www.google-analytics.com https://analytics.google.com; " +
+                                        "https://www.google-analytics.com https://analytics.google.com " +
+                                        "https://cdn.jsdelivr.net https://unpkg.com; " +
                                         "frame-src 'self'; " +
                                         "form-action 'self';")
                         )

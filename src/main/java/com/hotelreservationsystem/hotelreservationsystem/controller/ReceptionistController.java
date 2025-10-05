@@ -24,7 +24,7 @@ public class ReceptionistController {
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         System.out.println("🏨 Receptionist dashboard accessed");
-        return "receptionist-dashboard-standalone";
+        return "receptionist-dashboard";
     }
 
     @PostMapping("/booking/search")
