@@ -429,7 +429,8 @@
 
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('Payment page DOM loaded, starting initialization');
-
+                
+                // Extra safety check - only run payment JavaScript if we're actually on payment page
                 const normalizedPath = window.location.pathname.replace(/\/+$/, '');
                 if (!normalizedPath.endsWith('/payment')) {
                     console.log('Payment JavaScript attempted to run on wrong page:', window.location.pathname);
@@ -530,7 +531,7 @@
                 document.getElementById('checkOutDisplay').textContent = formatDate(booking.checkOutDate);
                 document.getElementById('durationDisplay').textContent = `${booking.numberOfNights} night${booking.numberOfNights !== 1 ? 's' : ''}`;
             }
-
+            
             function toNumber(value) {
                 if (typeof value === 'number') {
                     return value;
@@ -560,6 +561,7 @@
                 document.getElementById('summaryTaxes').textContent = formatCurrency(taxes);
                 document.getElementById('summaryTotal').textContent = formatCurrency(toNumber(booking.totalAmount));
 
+                // Update all amount displays
                 document.getElementById('paymentAmount').textContent = formatCurrency(toNumber(booking.totalAmount));
                 document.getElementById('bankTransferAmount').textContent = formatCurrency(toNumber(booking.totalAmount));
                 document.getElementById('cashPaymentAmount').textContent = formatCurrency(toNumber(booking.totalAmount));
@@ -570,13 +572,18 @@
             function setupPaymentForm(booking) {
                 console.log('Payment page: Setting up custom payment form with booking:', booking);
 
+                // Setup custom payment form
                 document.getElementById('bookingReferenceField').value = booking.bookingReference;
                 const totalAmountNumber = toNumber(booking.totalAmount);
-                document.getElementById('paymentAmountField').value = totalAmountNumber !== null
-                    ? totalAmountNumber.toFixed(2)
-                    : '';
+                if (totalAmountNumber !== null) {
+                    document.getElementById('paymentAmountField').value = totalAmountNumber.toFixed(2);
+                } else {
+                    document.getElementById('paymentAmountField').value = '';
+                }
 
                 console.log('Payment page: Custom payment form fields populated');
+
+                // Payment button will be enabled by form validation
                 console.log('Payment page: Payment form ready');
             }
 
@@ -606,6 +613,7 @@
                 const form = document.getElementById('creditCardPaymentForm');
                 if (!form) return;
 
+                // Add input formatting
                 const cardNumberInput = document.getElementById('cardNumber');
                 const expiryDateInput = document.getElementById('expiryDate');
                 const cvvInput = document.getElementById('cvv');
@@ -627,23 +635,24 @@
                 cvvInput?.addEventListener('input', function(e) {
                     e.target.value = e.target.value.replace(/\D/g, '');
                 });
-
+                
                 const termsCheckbox = document.getElementById('termsAccepted');
                 const payBtn = document.getElementById('payNowBtn');
 
                 function updatePayButtonState() {
                     const isValid = form.checkValidity() && termsCheckbox?.checked;
-                    if (payBtn) {
-                        payBtn.disabled = !isValid;
-                    }
+                    payBtn.disabled = !isValid;
                 }
 
+                // Enable/disable pay button based on form validity
                 form.addEventListener('input', updatePayButtonState);
                 form.addEventListener('change', updatePayButtonState);
                 termsCheckbox?.addEventListener('change', updatePayButtonState);
 
+                // Ensure correct initial state once listeners are in place
                 updatePayButtonState();
 
+                // Handle form submission
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
                     if (form.checkValidity()) {
@@ -680,6 +689,7 @@
                     amount: numericAmount
                 };
 
+                // Show loading
                 document.getElementById('paymentProgress').style.display = 'block';
                 document.getElementById('payNowBtn').disabled = true;
 
