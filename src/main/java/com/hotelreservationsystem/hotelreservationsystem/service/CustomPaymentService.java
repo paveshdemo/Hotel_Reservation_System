@@ -39,11 +39,11 @@ public class CustomPaymentService {
     /**
      * Process custom payment - simulates payment gateway
      */
-    public Map<String, Object> processCustomPayment(String bookingReference, String cardNumber, 
-                                                   String expiryDate, String cvv, String cardholderName, 
+    public Map<String, Object> processCustomPayment(String bookingReference, String cardNumber,
+                                                   String expiryDate, String cvv, String cardholderName,
                                                    BigDecimal amount) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
             // Validate card details (basic validation for demo)
             if (!isValidCard(cardNumber, expiryDate, cvv, cardholderName)) {
@@ -51,26 +51,42 @@ public class CustomPaymentService {
                 result.put("error", "Invalid card details");
                 return result;
             }
-            
+
+            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+                result.put("success", false);
+                result.put("error", "Invalid payment amount");
+                return result;
+            }
+
             // Find booking
             Booking booking = bookingRepository.findByBookingReference(bookingReference)
                     .orElseThrow(() -> new RuntimeException("Booking not found: " + bookingReference));
-            
+
+            BigDecimal bookingTotal = booking.getTotalAmount();
+            if (bookingTotal == null) {
+                throw new RuntimeException("Booking total amount is missing");
+            }
+
+            // Always charge the exact booking amount to prevent tampering
+            if (bookingTotal.compareTo(amount) != 0) {
+                System.out.println("Custom payment: Adjusting mismatched amount from " + amount + " to booking total " + bookingTotal);
+            }
+
             // Create payment record
             Payment payment = new Payment();
             payment.setBooking(booking);
             payment.setPaymentMethod(PaymentMethod.CREDIT_CARD);
             payment.setPaymentReference(UUID.randomUUID().toString());
-            payment.setAmount(amount);
+            payment.setAmount(bookingTotal);
             payment.setCurrency("LKR");
             payment.setPaymentDate(LocalDateTime.now());
             payment.setPaymentStatus(PaymentStatus.COMPLETED);
             payment.setCompletedAt(LocalDateTime.now());
-            
+
             // Update booking status
             booking.setPaymentStatus(PaymentStatus.COMPLETED);
             booking.setBookingStatus(BookingStatus.CONFIRMED);
-            
+
             // Save payment and booking
             paymentRepository.save(payment);
             bookingRepository.save(booking);
@@ -85,7 +101,7 @@ public class CustomPaymentService {
             result.put("success", true);
             result.put("paymentReference", payment.getPaymentReference());
             result.put("bookingReference", bookingReference);
-            result.put("amount", amount);
+            result.put("amount", bookingTotal);
             result.put("qrCode", qrCodeBase64);
             
             System.out.println("=== CUSTOM PAYMENT SUCCESSFUL ===");
