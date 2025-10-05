@@ -188,6 +188,12 @@
                 const bookingDetailsDiv = document.getElementById('booking-details');
                 const loadingDiv = document.getElementById('loading-summary');
                 
+                const amount = Number(data.amount ?? 0);
+                const formattedAmount = amount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
                 bookingDetailsDiv.innerHTML = `
                     <h6 class="mb-3">🎫 ${data.bookingReference}</h6>
                     <div class="row mb-2">
@@ -217,13 +223,13 @@
                     <hr>
                     <div class="row">
                         <div class="col-6"><strong>Total Amount:</strong></div>
-                        <div class="col-6"><strong>LKR ${parseFloat(data.amount).toFixed(2)}</strong></div>
+                        <div class="col-6"><strong>LKR ${formattedAmount}</strong></div>
                     </div>
                 `;
-                
+
                 // Set form hidden fields
                 document.getElementById('booking-reference').value = data.bookingReference;
-                document.getElementById('booking-amount').value = data.amount;
+                document.getElementById('booking-amount').value = amount.toFixed(2);
                 
                 loadingDiv.style.display = 'none';
                 bookingDetailsDiv.style.display = 'block';
@@ -313,13 +319,25 @@
                 buttonText.textContent = 'Processing...';
                 buttonSpinner.style.display = 'inline-block';
                 
+                const derivedAmount = bookingData && bookingData.amount !== undefined
+                    ? Number(bookingData.amount)
+                    : Number(document.getElementById('booking-amount').value);
+
+                if (!Number.isFinite(derivedAmount) || derivedAmount <= 0) {
+                    showPaymentError('Unable to determine payment amount. Please contact support.');
+                    payButton.disabled = false;
+                    buttonText.textContent = 'Pay Now';
+                    buttonSpinner.style.display = 'none';
+                    return;
+                }
+
                 const formData = {
                     bookingReference: document.getElementById('booking-reference').value,
                     cardNumber: document.getElementById('card-number').value,
                     expiryDate: document.getElementById('expiry-date').value,
                     cvv: document.getElementById('cvv').value,
                     cardholderName: document.getElementById('cardholder-name').value,
-                    amount: parseFloat(document.getElementById('booking-amount').value)
+                    amount: Number(derivedAmount.toFixed(2))
                 };
                 
                 fetch('/api/custom-payment/process', {
