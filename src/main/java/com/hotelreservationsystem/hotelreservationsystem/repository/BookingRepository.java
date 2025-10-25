@@ -3,11 +3,14 @@ package com.hotelreservationsystem.hotelreservationsystem.repository;
 import com.hotelreservationsystem.hotelreservationsystem.model.Booking;
 import com.hotelreservationsystem.hotelreservationsystem.model.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,4 +72,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Find top 5 recent bookings for dashboard (ordered by createdAt)
     List<Booking> findTop5ByOrderByCreatedAtDesc();
+
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Booking b SET b.bookingStatus = :status WHERE b.bookingId = :id")
+    int updateBookingStatus(@Param("id") Long id, @Param("status") BookingStatus status);
+
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Booking b SET b.bookingStatus = :status, b.cancelledAt = :cancelledAt WHERE b.bookingId = :id")
+    int updateBookingStatusAndCancelledAt(@Param("id") Long id,
+                                          @Param("status") BookingStatus status,
+                                          @Param("cancelledAt") LocalDateTime cancelledAt);
 }
