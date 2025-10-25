@@ -34,7 +34,7 @@ public class AdminSecurityConfig {
 
                 if ("ROLE_ADMIN".equals(role)) {
                     return "/admin/dashboard";
-                } else if ("ROLE_STAFF".equals(role)) {
+                } else if ("ROLE_STAFF".equals(role) || "ROLE_RECEPTIONIST".equals(role)) {
                     return "/receptionist/dashboard";
                 } else {
                     // Customer trying to use admin login
@@ -53,7 +53,7 @@ public class AdminSecurityConfig {
                         // Allow static resources
                         .requestMatchers("/admin/css/**", "/admin/js/**", "/admin/images/**").permitAll()
                         .requestMatchers("/admin/login").permitAll()
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF", "RECEPTIONIST")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
