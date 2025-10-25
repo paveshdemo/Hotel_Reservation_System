@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,7 +47,6 @@ public class AdminBookingController {
     }
 
     @PostMapping("/approve/{id}")
-    @Transactional
     public String approveBooking(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
         if (optionalBooking.isEmpty()) {
@@ -87,7 +87,6 @@ public class AdminBookingController {
     }
 
     @PostMapping("/cancel/{id}")
-    @Transactional
     public String cancelBooking(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
         if (optionalBooking.isEmpty()) {
