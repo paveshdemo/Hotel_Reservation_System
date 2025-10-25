@@ -8,8 +8,6 @@ import com.hotelreservationsystem.hotelreservationsystem.model.User;
 import com.hotelreservationsystem.hotelreservationsystem.repository.BookingRepository;
 import com.hotelreservationsystem.hotelreservationsystem.repository.RoomRepository;
 import com.hotelreservationsystem.hotelreservationsystem.service.NotificationService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +15,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -54,7 +52,6 @@ public class AdminBookingController {
     }
 
     @PostMapping("/approve/{id}")
-    @Transactional
     public String approveBooking(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
         if (optionalBooking.isEmpty()) {
@@ -68,15 +65,6 @@ public class AdminBookingController {
             return "redirect:/admin/bookings";
         }
 
-        Room room = booking.getRoom();
-        Long roomId = room != null ? room.getRoomId() : null;
-        User recipient = booking.getCustomer() != null ? booking.getCustomer().getUser() : null;
-        String roomNumber = room != null ? room.getRoomNumber() : "N/A";
-        LocalDate checkInDate = booking.getCheckInDate();
-        LocalDate checkOutDate = booking.getCheckOutDate();
-
-        detachBookingEntity(booking);
-
         int updatedRows = bookingRepository.updateBookingStatus(id, BookingStatus.APPROVED);
         if (updatedRows == 0) {
             logger.warn("Failed to update booking status to APPROVED for booking {}", id);
@@ -84,19 +72,18 @@ public class AdminBookingController {
             return "redirect:/admin/bookings";
         }
 
-        if (roomId != null) {
-            int roomRows = roomRepository.updateRoomStatus(roomId, RoomStatus.OCCUPIED);
-            if (roomRows == 0) {
-                logger.warn("Failed to mark room {} as occupied while approving booking {}", roomId, id);
-            }
+        Room room = booking.getRoom();
+        if (room != null) {
+            room.setIsAvailable(false);
+            roomRepository.save(room);
         }
 
         // CREATE NOTIFICATION FOR CUSTOMER
         String message = String.format(
                 "Your booking for Room %s from %s to %s has been approved!",
-                roomNumber,
-                checkInDate,
-                checkOutDate
+                room != null ? room.getRoomNumber() : "N/A",
+                booking.getCheckInDate(),
+                booking.getCheckOutDate()
         );
         if (recipient != null) {
             notificationService.createNotification(recipient, message);
@@ -107,7 +94,6 @@ public class AdminBookingController {
     }
 
     @PostMapping("/cancel/{id}")
-    @Transactional
     public String cancelBooking(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
         if (optionalBooking.isEmpty()) {
@@ -117,20 +103,12 @@ public class AdminBookingController {
 
         Booking booking = optionalBooking.get();
         Room room = booking.getRoom();
-        Long roomId = room != null ? room.getRoomId() : null;
         if (booking.getBookingStatus() == BookingStatus.CANCELLED) {
             redirectAttributes.addFlashAttribute("errorMessage", "This booking has already been cancelled.");
             return "redirect:/admin/bookings";
         }
 
         BookingStatus previousStatus = booking.getBookingStatus();
-
-        User recipient = booking.getCustomer() != null ? booking.getCustomer().getUser() : null;
-        String roomNumber = room != null ? room.getRoomNumber() : "N/A";
-        LocalDate checkInDate = booking.getCheckInDate();
-        LocalDate checkOutDate = booking.getCheckOutDate();
-
-        detachBookingEntity(booking);
 
         int updatedRows = bookingRepository.updateBookingStatusAndCancelledAt(
                 id,
@@ -145,19 +123,17 @@ public class AdminBookingController {
         }
 
         if (EnumSet.of(BookingStatus.APPROVED, BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN).contains(previousStatus)) {
-            if (roomId != null) {
-                int roomRows = roomRepository.updateRoomStatus(roomId, RoomStatus.AVAILABLE);
-                if (roomRows == 0) {
-                    logger.warn("Failed to mark room {} as available while cancelling booking {}", roomId, id);
-                }
+            if (room != null) {
+                room.setIsAvailable(true);
+                roomRepository.save(room);
             }
         }
 
         String message = String.format(
                 "Your booking for Room %s from %s to %s has been cancelled.",
-                roomNumber,
-                checkInDate,
-                checkOutDate
+                room != null ? room.getRoomNumber() : "N/A",
+                booking.getCheckInDate(),
+                booking.getCheckOutDate()
         );
         if (recipient != null) {
             notificationService.createNotification(recipient, message);

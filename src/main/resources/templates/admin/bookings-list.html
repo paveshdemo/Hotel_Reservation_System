@@ -318,7 +318,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <form th:if="${booking.bookingStatus.name() == 'PENDING' or booking.bookingStatus.name() == 'PENDING_PAYMENT'}"
+                                    <form th:if="${booking.bookingStatus.name() == 'PENDING'}"
                                           th:action="@{/admin/bookings/approve/{id}(id=${booking.bookingId})}"
                                           method="post"
                                           class="d-inline">
