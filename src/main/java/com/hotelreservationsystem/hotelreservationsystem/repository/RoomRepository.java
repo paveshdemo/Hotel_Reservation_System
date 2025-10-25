@@ -4,9 +4,11 @@ import com.hotelreservationsystem.hotelreservationsystem.model.Room;
 import com.hotelreservationsystem.hotelreservationsystem.model.RoomStatus;
 import com.hotelreservationsystem.hotelreservationsystem.model.RoomType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,6 +67,11 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     
     // Find rooms with price range
     @Query("SELECT r FROM Room r WHERE r.roomType.basePrice BETWEEN :minPrice AND :maxPrice")
-    List<Room> findRoomsInPriceRange(@Param("minPrice") Double minPrice, 
+    List<Room> findRoomsInPriceRange(@Param("minPrice") Double minPrice,
                                     @Param("maxPrice") Double maxPrice);
+
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Room r SET r.status = :status WHERE r.roomId = :id")
+    int updateRoomStatus(@Param("id") Long roomId, @Param("status") RoomStatus status);
 }
