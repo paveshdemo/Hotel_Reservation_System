@@ -107,7 +107,7 @@ public class AuthController {
 
         if ("ROLE_ADMIN".equals(role)) {
             return "redirect:/admin/dashboard";
-        } else if ("ROLE_STAFF".equals(role)) {
+        } else if ("ROLE_STAFF".equals(role) || "ROLE_RECEPTIONIST".equals(role)) {
             return "redirect:/receptionist/dashboard";
         } else {
             return "redirect:/dashboard";

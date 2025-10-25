@@ -57,7 +57,7 @@ public class SecurityConfig {
 
                 if ("ROLE_ADMIN".equals(role)) {
                     return "/dashboard";
-                } else if ("ROLE_STAFF".equals(role)) {
+                } else if ("ROLE_STAFF".equals(role) || "ROLE_RECEPTIONIST".equals(role)) {
                     return "/receptionist/dashboard";
                 } else {
                     return "/dashboard";
@@ -93,7 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/my-bookings").authenticated()
                         .requestMatchers("/profile").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/receptionist/**").hasRole("STAFF")
+                        .requestMatchers("/receptionist/**").hasAnyRole("STAFF", "RECEPTIONIST")
 
                         // API endpoints
                         .requestMatchers("/api/bookings/**").authenticated()

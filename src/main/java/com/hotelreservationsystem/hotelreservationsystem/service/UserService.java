@@ -190,7 +190,7 @@ public class UserService implements UserDetailsService {
             receptionist.setPasswordHash(passwordEncoder.encode("receptionist123"));
             receptionist.setFirstName("Sarah");
             receptionist.setLastName("Johnson");
-            receptionist.setRole(UserRole.STAFF);
+            receptionist.setRole(UserRole.RECEPTIONIST);
             receptionist.setIsActive(true);
             receptionist.setEmailVerified(true);
             receptionist.setCreatedAt(LocalDateTime.now());
