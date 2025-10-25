@@ -55,25 +55,43 @@ public class AdminStaffController {
 
     @PostMapping("/save")
     public String saveStaff(@ModelAttribute("staff") User staff, RedirectAttributes redirectAttributes) {
-        // When updating, the password field might be empty.
-        // If it is, we should keep the old password.
-        if (staff.getUserId() != null) { // This is an update
-            User existingUser = userRepository.findById(staff.getUserId()).orElseThrow();
-            if (staff.getPasswordHash() == null || staff.getPasswordHash().isEmpty()) {
-                staff.setPasswordHash(existingUser.getPasswordHash()); // Keep old password
-            } else {
-                staff.setPasswordHash(passwordEncoder.encode(staff.getPasswordHash())); // Set new password
+        if (staff.getUserId() != null) { // Updating an existing staff member
+            User existingUser = userRepository.findById(staff.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid staff Id:" + staff.getUserId()));
+
+            boolean emailTakenByAnotherUser = userRepository.findByEmail(staff.getEmail())
+                    .filter(user -> !user.getUserId().equals(existingUser.getUserId()))
+                    .isPresent();
+            if (emailTakenByAnotherUser) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Email already exists!");
+                return "redirect:/admin/staff/edit/" + staff.getUserId();
             }
-        } else { // This is a new user
-            // Check if username already exists for new users
-            if (userRepository.findByUsername(staff.getUsername()).isPresent()) {
+
+            existingUser.setEmail(staff.getEmail());
+            existingUser.setFirstName(staff.getFirstName());
+            existingUser.setLastName(staff.getLastName());
+            existingUser.setRole(staff.getRole());
+
+            if (staff.getPasswordHash() != null && !staff.getPasswordHash().isBlank()) {
+                existingUser.setPasswordHash(passwordEncoder.encode(staff.getPasswordHash()));
+            }
+
+            userRepository.save(existingUser);
+        } else { // Creating a new staff member
+            if (userRepository.existsByUsername(staff.getUsername())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Username already exists!");
                 return "redirect:/admin/staff/new";
             }
+
+            if (userRepository.existsByEmail(staff.getEmail())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Email already exists!");
+                return "redirect:/admin/staff/new";
+            }
+
             staff.setPasswordHash(passwordEncoder.encode(staff.getPasswordHash()));
+            userRepository.save(staff);
         }
 
-        userRepository.save(staff);
         redirectAttributes.addFlashAttribute("successMessage", "Staff member saved successfully!");
         return "redirect:/admin/staff";
     }
