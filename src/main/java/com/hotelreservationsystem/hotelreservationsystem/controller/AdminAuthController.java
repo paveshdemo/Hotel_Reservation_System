@@ -63,7 +63,7 @@ public class AdminAuthController {
 
         if ("ROLE_ADMIN".equals(role)) {
             return "redirect:/admin/dashboard";
-        } else if ("ROLE_STAFF".equals(role)) {
+        } else if (isStaffAuthority(role)) {
             return "redirect:/receptionist/dashboard";
         } else {
             // If customer somehow logs in through admin login, redirect to customer dashboard
@@ -84,7 +84,9 @@ public class AdminAuthController {
             long availableRooms = roomRepository.countByStatus(RoomStatus.AVAILABLE);
             long totalCustomers = customerRepository.count();
             long activePromotions = promotionRepository.countByIsActiveTrue();
-            long totalStaff = userRepository.countByUserRole(UserRole.STAFF) + userRepository.countByUserRole(UserRole.ADMIN);
+            long totalStaff = UserRole.getStaffRoles().stream()
+                    .mapToLong(userRepository::countByUserRole)
+                    .sum();
 
             // Calculate total revenue from completed bookings
             BigDecimal totalRevenue = paymentRepository.findAll().stream()
@@ -109,10 +111,24 @@ public class AdminAuthController {
             model.addAttribute("adminName", adminName);
 
             return "admin/dashboard";
-        } else if ("ROLE_STAFF".equals(role)) {
+        } else if (isStaffAuthority(role)) {
             return "redirect:/receptionist/dashboard";
         } else {
             return "redirect:/dashboard";
+        }
+    }
+
+    private boolean isStaffAuthority(String authority) {
+        if (authority == null || !authority.startsWith("ROLE_")) {
+            return false;
+        }
+
+        String roleName = authority.substring("ROLE_".length());
+        try {
+            UserRole userRole = UserRole.valueOf(roleName);
+            return userRole.isStaffRole() && userRole != UserRole.ADMIN;
+        } catch (IllegalArgumentException ex) {
+            return false;
         }
     }
 }

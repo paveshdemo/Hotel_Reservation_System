@@ -1,6 +1,7 @@
 package com.hotelreservationsystem.hotelreservationsystem.model;
 
 import jakarta.persistence.*;
+import com.hotelreservationsystem.hotelreservationsystem.model.converter.UserRoleConverter;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -44,7 +45,7 @@ public class User implements UserDetails {
     @NotBlank(message = "Last name is required")
     private String lastName;
     
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = UserRoleConverter.class)
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.CUSTOMER;
     

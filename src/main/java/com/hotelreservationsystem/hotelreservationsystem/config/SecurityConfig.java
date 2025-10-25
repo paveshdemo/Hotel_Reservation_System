@@ -1,5 +1,6 @@
 package com.hotelreservationsystem.hotelreservationsystem.config;
 
+import com.hotelreservationsystem.hotelreservationsystem.model.UserRole;
 import com.hotelreservationsystem.hotelreservationsystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -57,7 +58,7 @@ public class SecurityConfig {
 
                 if ("ROLE_ADMIN".equals(role)) {
                     return "/dashboard";
-                } else if ("ROLE_STAFF".equals(role)) {
+                } else if (isStaffAuthority(role)) {
                     return "/receptionist/dashboard";
                 } else {
                     return "/dashboard";
@@ -92,8 +93,8 @@ public class SecurityConfig {
                         .requestMatchers("/reviews/**").authenticated()
                         .requestMatchers("/my-bookings").authenticated()
                         .requestMatchers("/profile").authenticated()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/receptionist/**").hasRole("STAFF")
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF", "RECEPTIONIST", "ACCOUNTANT", "MARKETING", "HOUSEKEEPING")
+                        .requestMatchers("/receptionist/**").hasAnyRole("STAFF", "RECEPTIONIST", "ACCOUNTANT", "MARKETING", "HOUSEKEEPING")
 
                         // API endpoints
                         .requestMatchers("/api/bookings/**").authenticated()
@@ -152,5 +153,19 @@ public class SecurityConfig {
         http.authenticationProvider(authenticationProvider());
 
         return http.build();
+    }
+
+    private boolean isStaffAuthority(String authority) {
+        if (authority == null || !authority.startsWith("ROLE_")) {
+            return false;
+        }
+
+        String roleName = authority.substring("ROLE_".length());
+        try {
+            UserRole userRole = UserRole.valueOf(roleName);
+            return userRole.isStaffRole() && userRole != UserRole.ADMIN;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 }
