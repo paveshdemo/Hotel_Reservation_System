@@ -3,6 +3,8 @@ package com.hotelreservationsystem.hotelreservationsystem.controller;
 import com.hotelreservationsystem.hotelreservationsystem.model.Booking;
 import com.hotelreservationsystem.hotelreservationsystem.model.BookingStatus;
 import com.hotelreservationsystem.hotelreservationsystem.model.Room;
+import com.hotelreservationsystem.hotelreservationsystem.model.RoomStatus;
+import com.hotelreservationsystem.hotelreservationsystem.model.User;
 import com.hotelreservationsystem.hotelreservationsystem.repository.BookingRepository;
 import com.hotelreservationsystem.hotelreservationsystem.repository.RoomRepository;
 import com.hotelreservationsystem.hotelreservationsystem.service.NotificationService;
@@ -32,6 +34,9 @@ public class AdminBookingController {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final NotificationService notificationService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     public AdminBookingController(BookingRepository bookingRepository, RoomRepository roomRepository, NotificationService notificationService) {
@@ -80,7 +85,9 @@ public class AdminBookingController {
                 booking.getCheckInDate(),
                 booking.getCheckOutDate()
         );
-        notificationService.createNotification(booking.getCustomer().getUser(), message);
+        if (recipient != null) {
+            notificationService.createNotification(recipient, message);
+        }
 
         redirectAttributes.addFlashAttribute("successMessage", "Booking approved and customer notified!");
         return "redirect:/admin/bookings";
@@ -128,9 +135,17 @@ public class AdminBookingController {
                 booking.getCheckInDate(),
                 booking.getCheckOutDate()
         );
-        notificationService.createNotification(booking.getCustomer().getUser(), message);
+        if (recipient != null) {
+            notificationService.createNotification(recipient, message);
+        }
 
         redirectAttributes.addFlashAttribute("successMessage", "Booking cancelled successfully!");
         return "redirect:/admin/bookings";
+    }
+
+    private void detachBookingEntity(Booking booking) {
+        if (booking != null && entityManager != null && entityManager.contains(booking)) {
+            entityManager.detach(booking);
+        }
     }
 }
