@@ -58,7 +58,7 @@ public class SecurityConfig {
 
                 if ("ROLE_ADMIN".equals(role)) {
                     return "/dashboard";
-                } else if (isStaffAuthority(role)) {
+                } else if ("ROLE_STAFF".equals(role) || "ROLE_RECEPTIONIST".equals(role)) {
                     return "/receptionist/dashboard";
                 } else {
                     return "/dashboard";
@@ -93,8 +93,8 @@ public class SecurityConfig {
                         .requestMatchers("/reviews/**").authenticated()
                         .requestMatchers("/my-bookings").authenticated()
                         .requestMatchers("/profile").authenticated()
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "STAFF", "RECEPTIONIST", "ACCOUNTANT", "MARKETING", "HOUSEKEEPING")
-                        .requestMatchers("/receptionist/**").hasAnyRole("STAFF", "RECEPTIONIST", "ACCOUNTANT", "MARKETING", "HOUSEKEEPING")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/receptionist/**").hasAnyRole("STAFF", "RECEPTIONIST")
 
                         // API endpoints
                         .requestMatchers("/api/bookings/**").authenticated()
