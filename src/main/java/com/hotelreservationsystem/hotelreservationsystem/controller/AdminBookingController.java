@@ -6,18 +6,28 @@ import com.hotelreservationsystem.hotelreservationsystem.model.Room;
 import com.hotelreservationsystem.hotelreservationsystem.repository.BookingRepository;
 import com.hotelreservationsystem.hotelreservationsystem.repository.RoomRepository;
 import com.hotelreservationsystem.hotelreservationsystem.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDateTime;
+import java.util.EnumSet;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/bookings")
 public class AdminBookingController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AdminBookingController.class);
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
@@ -38,18 +48,35 @@ public class AdminBookingController {
 
     @PostMapping("/approve/{id}")
     public String approveBooking(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        Booking booking = bookingRepository.findById(id).orElseThrow();
-        booking.setBookingStatus(BookingStatus.APPROVED);
-        bookingRepository.save(booking);
+        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+        if (optionalBooking.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
+            return "redirect:/admin/bookings";
+        }
+
+        Booking booking = optionalBooking.get();
+        if (booking.getBookingStatus() != BookingStatus.PENDING && booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Only pending bookings can be approved.");
+            return "redirect:/admin/bookings";
+        }
+
+        int updatedRows = bookingRepository.updateBookingStatus(id, BookingStatus.APPROVED);
+        if (updatedRows == 0) {
+            logger.warn("Failed to update booking status to APPROVED for booking {}", id);
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to approve booking. Please try again.");
+            return "redirect:/admin/bookings";
+        }
 
         Room room = booking.getRoom();
-        room.setIsAvailable(false);
-        roomRepository.save(room);
+        if (room != null) {
+            room.setIsAvailable(false);
+            roomRepository.save(room);
+        }
 
         // CREATE NOTIFICATION FOR CUSTOMER
         String message = String.format(
                 "Your booking for Room %s from %s to %s has been approved!",
-                room.getRoomNumber(),
+                room != null ? room.getRoomNumber() : "N/A",
                 booking.getCheckInDate(),
                 booking.getCheckOutDate()
         );
@@ -61,22 +88,43 @@ public class AdminBookingController {
 
     @PostMapping("/cancel/{id}")
     public String cancelBooking(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        Booking booking = bookingRepository.findById(id).orElseThrow();
-        BookingStatus previousStatus = booking.getBookingStatus();
-
-        booking.setBookingStatus(BookingStatus.CANCELLED);
-        bookingRepository.save(booking);
-
-        if (previousStatus == BookingStatus.APPROVED) {
-            Room room = booking.getRoom();
-            room.setIsAvailable(true);
-            roomRepository.save(room);
+        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+        if (optionalBooking.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
+            return "redirect:/admin/bookings";
         }
 
-        // Optional: You could also create a notification for cancellations
+        Booking booking = optionalBooking.get();
+        Room room = booking.getRoom();
+        if (booking.getBookingStatus() == BookingStatus.CANCELLED) {
+            redirectAttributes.addFlashAttribute("errorMessage", "This booking has already been cancelled.");
+            return "redirect:/admin/bookings";
+        }
+
+        BookingStatus previousStatus = booking.getBookingStatus();
+
+        int updatedRows = bookingRepository.updateBookingStatusAndCancelledAt(
+                id,
+                BookingStatus.CANCELLED,
+                LocalDateTime.now()
+        );
+
+        if (updatedRows == 0) {
+            logger.warn("Failed to cancel booking {}", id);
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel booking. Please try again.");
+            return "redirect:/admin/bookings";
+        }
+
+        if (EnumSet.of(BookingStatus.APPROVED, BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN).contains(previousStatus)) {
+            if (room != null) {
+                room.setIsAvailable(true);
+                roomRepository.save(room);
+            }
+        }
+
         String message = String.format(
                 "Your booking for Room %s from %s to %s has been cancelled.",
-                booking.getRoom().getRoomNumber(),
+                room != null ? room.getRoomNumber() : "N/A",
                 booking.getCheckInDate(),
                 booking.getCheckOutDate()
         );
