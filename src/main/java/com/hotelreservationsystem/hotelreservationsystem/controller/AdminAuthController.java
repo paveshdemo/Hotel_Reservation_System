@@ -117,4 +117,18 @@ public class AdminAuthController {
             return "redirect:/dashboard";
         }
     }
+
+    private boolean isStaffAuthority(String authority) {
+        if (authority == null || !authority.startsWith("ROLE_")) {
+            return false;
+        }
+
+        String roleName = authority.substring("ROLE_".length());
+        try {
+            UserRole userRole = UserRole.valueOf(roleName);
+            return userRole.isStaffRole() && userRole != UserRole.ADMIN;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.hotelreservationsystem.hotelreservationsystem.config;
 
+import com.hotelreservationsystem.hotelreservationsystem.model.UserRole;
 import com.hotelreservationsystem.hotelreservationsystem.service.JpaUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -80,5 +81,19 @@ public class AdminSecurityConfig {
         http.authenticationProvider(adminAuthProvider);
 
         return http.build();
+    }
+
+    private boolean isStaffAuthority(String authority) {
+        if (authority == null || !authority.startsWith("ROLE_")) {
+            return false;
+        }
+
+        String roleName = authority.substring("ROLE_".length());
+        try {
+            UserRole userRole = UserRole.valueOf(roleName);
+            return userRole.isStaffRole() && userRole != UserRole.ADMIN;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 }

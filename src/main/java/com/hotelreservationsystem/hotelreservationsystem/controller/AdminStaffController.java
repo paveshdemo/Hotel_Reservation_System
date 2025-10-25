@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +30,8 @@ public class AdminStaffController {
     @GetMapping
     public String listStaff(Model model) {
         List<User> staffList = userRepository.findAll().stream()
-                .filter(user -> user.getRole() != UserRole.ADMIN)
+                .filter(user -> user.getRole() != null)
+                .filter(user -> user.getRole().isStaffRole() && user.getRole() != UserRole.ADMIN)
                 .collect(Collectors.toList());
         model.addAttribute("staffList", staffList);
         return "admin/staff-list";
@@ -39,10 +40,7 @@ public class AdminStaffController {
     @GetMapping("/new")
     public String showAddStaffForm(Model model) {
         model.addAttribute("staff", new User());
-        List<UserRole> roles = Arrays.stream(UserRole.values())
-                .filter(role -> role != UserRole.ADMIN)
-                .collect(Collectors.toList());
-        model.addAttribute("roles", roles);
+        model.addAttribute("roles", new ArrayList<>(UserRole.getAssignableStaffRoles()));
         return "admin/staff-form";
     }
 
@@ -51,10 +49,7 @@ public class AdminStaffController {
         User staff = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid staff Id:" + id));
         model.addAttribute("staff", staff);
-        List<UserRole> roles = Arrays.stream(UserRole.values())
-                .filter(role -> role != UserRole.ADMIN)
-                .collect(Collectors.toList());
-        model.addAttribute("roles", roles);
+        model.addAttribute("roles", new ArrayList<>(UserRole.getAssignableStaffRoles()));
         return "admin/staff-form";
     }
 

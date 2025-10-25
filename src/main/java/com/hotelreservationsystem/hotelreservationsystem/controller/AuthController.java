@@ -2,6 +2,7 @@ package com.hotelreservationsystem.hotelreservationsystem.controller;
 
 import com.hotelreservationsystem.hotelreservationsystem.dto.UserRegistrationDTO;
 import com.hotelreservationsystem.hotelreservationsystem.model.User;
+import com.hotelreservationsystem.hotelreservationsystem.model.UserRole;
 import com.hotelreservationsystem.hotelreservationsystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -183,6 +184,20 @@ public class AuthController {
             model.addAttribute("errorMessage", "Error resetting password: " + e.getMessage());
             model.addAttribute("token", token);
             return "reset-password";
+        }
+    }
+
+    private boolean isStaffAuthority(String authority) {
+        if (authority == null || !authority.startsWith("ROLE_")) {
+            return false;
+        }
+
+        String roleName = authority.substring("ROLE_".length());
+        try {
+            UserRole role = UserRole.valueOf(roleName);
+            return role.isStaffRole() && role != UserRole.ADMIN;
+        } catch (IllegalArgumentException ex) {
+            return false;
         }
     }
 }
