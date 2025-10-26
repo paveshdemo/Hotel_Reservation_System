@@ -20,20 +20,24 @@ public enum UserRole {
             HOUSEKEEPING
     ));
 
-    private static final Set<UserRole> ADMIN_AND_STAFF_ROLES = Collections.unmodifiableSet(EnumSet.of(
-            ADMIN,
-            RECEPTIONIST,
-            ACCOUNTANT,
-            MARKETING,
-            HOUSEKEEPING
-    ));
-
     public boolean isStaffRole() {
         return STAFF_ROLES.contains(this);
     }
 
     public static Set<UserRole> getAssignableStaffRoles() {
         return ADMIN_AND_STAFF_ROLES;
+    }
+
+    public String getDisplayName() {
+        return switch (this) {
+            case ADMIN -> "Admin";
+            case STAFF -> "Staff";
+            case RECEPTIONIST -> "Receptionist";
+            case ACCOUNTANT -> "Accountant";
+            case MARKETING -> "Marketing";
+            case HOUSEKEEPING -> "Housekeeping";
+            case CUSTOMER -> "Customer";
+        };
     }
 
     public String getDisplayName() {
