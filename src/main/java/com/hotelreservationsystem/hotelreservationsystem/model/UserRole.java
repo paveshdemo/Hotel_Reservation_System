@@ -14,8 +14,14 @@ public enum UserRole {
     CUSTOMER;
 
     private static final Set<UserRole> STAFF_ROLES = Collections.unmodifiableSet(EnumSet.of(
+            RECEPTIONIST,
+            ACCOUNTANT,
+            MARKETING,
+            HOUSEKEEPING
+    ));
+
+    private static final Set<UserRole> ASSIGNABLE_ROLES = Collections.unmodifiableSet(EnumSet.of(
             ADMIN,
-            STAFF,
             RECEPTIONIST,
             ACCOUNTANT,
             MARKETING,
@@ -27,6 +33,27 @@ public enum UserRole {
     }
 
     public static Set<UserRole> getAssignableStaffRoles() {
-        return STAFF_ROLES;
+        return ASSIGNABLE_ROLES;
+    }
+
+    public String getDisplayName() {
+        switch (this) {
+            case ADMIN:
+                return "Admin";
+            case STAFF:
+                return "Staff";
+            case RECEPTIONIST:
+                return "Receptionist";
+            case ACCOUNTANT:
+                return "Accountant";
+            case MARKETING:
+                return "Marketing";
+            case HOUSEKEEPING:
+                return "Housekeeping";
+            case CUSTOMER:
+                return "Customer";
+            default:
+                throw new IllegalStateException("Unexpected role: " + this);
+        }
     }
 }
