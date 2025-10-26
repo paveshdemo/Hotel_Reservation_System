@@ -14,8 +14,14 @@ public enum UserRole {
     CUSTOMER;
 
     private static final Set<UserRole> STAFF_ROLES = Collections.unmodifiableSet(EnumSet.of(
+            RECEPTIONIST,
+            ACCOUNTANT,
+            MARKETING,
+            HOUSEKEEPING
+    ));
+
+    private static final Set<UserRole> ADMIN_AND_STAFF_ROLES = Collections.unmodifiableSet(EnumSet.of(
             ADMIN,
-            STAFF,
             RECEPTIONIST,
             ACCOUNTANT,
             MARKETING,
@@ -27,6 +33,18 @@ public enum UserRole {
     }
 
     public static Set<UserRole> getAssignableStaffRoles() {
-        return STAFF_ROLES;
+        return ADMIN_AND_STAFF_ROLES;
+    }
+
+    public String getDisplayName() {
+        return switch (this) {
+            case ADMIN -> "Admin";
+            case STAFF -> "Staff";
+            case RECEPTIONIST -> "Receptionist";
+            case ACCOUNTANT -> "Accountant";
+            case MARKETING -> "Marketing";
+            case HOUSEKEEPING -> "Housekeeping";
+            case CUSTOMER -> "Customer";
+        };
     }
 }
