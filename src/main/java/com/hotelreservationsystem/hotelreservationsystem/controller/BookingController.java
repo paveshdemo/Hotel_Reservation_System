@@ -92,9 +92,22 @@ public class BookingController {
     @GetMapping("/{id}")
     public ResponseEntity<BookingResponseDTO> getBooking(@PathVariable Long id) {
         try {
+            System.err.println("=== GET BOOKING API CALLED ===");
+            System.err.println("BookingController: Getting booking with ID: " + id);
+            
             BookingResponseDTO booking = bookingService.getBookingById(id);
+            
+            System.err.println("BookingController: Booking found - " + booking.getBookingReference());
+            System.err.println("BookingController: Room Type - " + booking.getRoomType());
+            System.err.println("BookingController: Room Number - " + booking.getRoomNumber());
+            System.err.println("BookingController: Customer Name - " + booking.getCustomerName());
+            System.err.println("BookingController: Total Amount - " + booking.getTotalAmount());
+            System.err.println("BookingController: Returning booking data");
+            
             return ResponseEntity.ok(booking);
         } catch (Exception e) {
+            System.err.println("BookingController: Error getting booking ID " + id + ": " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
     }

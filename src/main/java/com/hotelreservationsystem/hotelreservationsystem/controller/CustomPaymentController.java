@@ -102,7 +102,7 @@ public class CustomPaymentController {
         try {
             Map<String, Object> result = bookingReference != null && !bookingReference.isBlank()
                     ? customPaymentService.validateBookingForPayment(bookingReference)
-                    : customPaymentService.validateBookingForPayment(bookingId);
+                    : customPaymentService.validateBookingForPayment(String.valueOf(bookingId));
 
             if ((Boolean) result.get("success")) {
                 return ResponseEntity.ok(result);

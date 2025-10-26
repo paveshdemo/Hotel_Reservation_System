@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -282,9 +281,8 @@ public class PageController {
             }
 
             // Add base URL for payment endpoints
-            String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             model.addAttribute("baseUrl", baseUrl);
-            model.addAttribute("contextPath", request.getContextPath());
             System.err.println("Payment: Added baseUrl to model: " + baseUrl);
 
             System.err.println("Payment: Returning payment template");

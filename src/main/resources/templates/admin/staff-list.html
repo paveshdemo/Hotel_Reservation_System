@@ -161,12 +161,6 @@
             font-size: 0.875rem;
         }
 
-        .badge-role {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-        }
-
         .badge-admin {
             background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%);
             color: var(--dark-bg);
@@ -175,31 +169,6 @@
         .badge-staff {
             background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
             color: var(--dark-bg);
-        }
-
-        .badge-receptionist {
-            background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
-            color: var(--dark-bg);
-        }
-
-        .badge-accountant {
-            background: linear-gradient(135deg, #198754 0%, #157347 100%);
-            color: #ffffff;
-        }
-
-        .badge-marketing {
-            background: linear-gradient(135deg, #6f42c1 0%, #563d7c 100%);
-            color: #ffffff;
-        }
-
-        .badge-housekeeping {
-            background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
-            color: var(--dark-bg);
-        }
-
-        .badge-default {
-            background: linear-gradient(135deg, #adb5bd 0%, #6c757d 100%);
-            color: #ffffff;
         }
 
         .btn-sm {
@@ -324,32 +293,11 @@
                                 </td>
                                 <td th:text="${staff.email}">email@example.com</td>
                                 <td>
-                                    <span th:with="roles=${T(com.hotelreservationsystem.hotelreservationsystem.model.UserRole)}"
-                                          th:switch="${staff.role}">
-                                        <span th:case="${roles.RECEPTIONIST}"
-                                              class="badge badge-role badge-receptionist">
-                                            <i class="fas fa-concierge-bell me-1"></i>
-                                            Receptionist
-                                        </span>
-                                        <span th:case="${roles.ACCOUNTANT}"
-                                              class="badge badge-role badge-accountant">
-                                            <i class="fas fa-calculator me-1"></i>
-                                            Accountant
-                                        </span>
-                                        <span th:case="${roles.MARKETING}"
-                                              class="badge badge-role badge-marketing">
-                                            <i class="fas fa-bullhorn me-1"></i>
-                                            Marketing
-                                        </span>
-                                        <span th:case="${roles.HOUSEKEEPING}"
-                                              class="badge badge-role badge-housekeeping">
-                                            <i class="fas fa-broom me-1"></i>
-                                            Housekeeping
-                                        </span>
-                                        <span th:case="*" class="badge badge-role badge-default">
-                                            <i class="fas fa-user-tie me-1"></i>
-                                            <span th:text="${staff.role != null ? staff.role.displayName : 'Unknown'}">Role</span>
-                                        </span>
+                                    <span th:if="${staff.role.name() == 'ADMIN'}" class="badge badge-admin">
+                                        <i class="fas fa-user-shield me-1"></i>Admin
+                                    </span>
+                                    <span th:if="${staff.role.name() == 'STAFF'}" class="badge badge-staff">
+                                        <i class="fas fa-user-tie me-1"></i>Staff
                                     </span>
                                 </td>
                                 <td>

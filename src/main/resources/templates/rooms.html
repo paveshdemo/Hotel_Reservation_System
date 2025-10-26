@@ -2,6 +2,169 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
 <head>
     <title>Luxury Rooms - Golden Palm Hotel</title>
+    <style>
+        /* Amazing Book Room Button Styles */
+        .book-room-btn,
+        .btn-book-room {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4a 50%, #f4c430 100%) !important;
+            color: #0a0a0a !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+            padding: 1rem 1.5rem !important;
+            border: none !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4), 
+                        0 0 30px rgba(255, 215, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .book-room-btn::before,
+        .btn-book-room::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.4), 
+                transparent);
+            transition: left 0.6s ease;
+        }
+
+        .book-room-btn:hover,
+        .btn-book-room:hover {
+            transform: translateY(-4px) scale(1.02) !important;
+            box-shadow: 0 12px 30px rgba(255, 215, 0, 0.5), 
+                        0 0 50px rgba(255, 215, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+            color: #000000 !important;
+            background: linear-gradient(135deg, #ffed4a 0%, #ffd700 50%, #f4c430 100%) !important;
+        }
+
+        .book-room-btn:hover::before,
+        .btn-book-room:hover::before {
+            left: 100%;
+        }
+
+        .book-room-btn:active,
+        .btn-book-room:active {
+            transform: translateY(-1px) scale(0.98) !important;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
+        }
+
+        .book-room-btn i,
+        .btn-book-room i {
+            font-size: 1.1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Enhanced button for dynamic content */
+        .btn-book-room {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-shimmer {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255, 255, 255, 0.3) 50%, 
+                transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        /* Room card enhancements */
+        .room-card {
+            transition: all 0.3s ease;
+        }
+
+        .room-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.2) !important;
+        }
+
+        /* Badge styling */
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.bg-secondary {
+            background: rgba(255, 215, 0, 0.15) !important;
+            color: var(--accent-primary) !important;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Enhanced price badge */
+        .badge.bg-primary {
+            background: linear-gradient(135deg, #ffd700 0%, #f4c430 100%) !important;
+            color: #0a0a0a !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .badge.bg-golden {
+            background: rgba(255, 215, 0, 0.2) !important;
+            color: #ffd700 !important;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            font-weight: 700 !important;
+        }
+
+        /* Card image overlay gradient */
+        .card-img-top {
+            transition: transform 0.4s ease;
+        }
+
+        .room-card:hover .card-img-top {
+            transform: scale(1.05);
+        }
+
+        .position-relative {
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body>
 <div th:fragment="content">
@@ -182,7 +345,7 @@
                             </div>
                             
                             <div class="mt-auto">
-                                <button class="btn btn-primary w-100 book-room-btn"
+                                <button class="btn w-100 book-room-btn"
                                         th:data-room-id="${room.roomId}"
                                         th:data-room-number="${room.roomNumber}"
                                         th:data-price="${room.pricePerNight}"
@@ -190,7 +353,7 @@
                                         th:data-max-occupancy="${room.roomType.maxOccupancy}"
                                         sec:authorize="isAuthenticated()">
                                     <i class="fas fa-calendar-check me-2"></i>
-                                    Book This Room
+                                    <span>Book This Room</span>
                                 </button>
                                 <a href="/auth/login" class="btn btn-outline-primary w-100" sec:authorize="isAnonymous()">
                                     <i class="fas fa-sign-in-alt me-2"></i>

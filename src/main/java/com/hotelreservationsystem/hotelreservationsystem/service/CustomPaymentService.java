@@ -249,10 +249,8 @@ public class CustomPaymentService {
             result.put("amount", bookingTotal);
 
         } catch (Exception e) {
-            Map<String, Object> result = new HashMap<>();
             result.put("success", false);
             result.put("error", e.getMessage());
-            return result;
         }
 
         return result;

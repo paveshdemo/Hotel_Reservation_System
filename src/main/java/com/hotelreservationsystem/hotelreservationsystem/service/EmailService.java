@@ -5,13 +5,12 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import jakarta.mail.internet.MimeMessage;
 import java.io.ByteArrayOutputStream;
@@ -21,27 +20,15 @@ import javax.imageio.ImageIO;
 @Service
 public class EmailService {
     
-    private final JavaMailSender mailSender;
-
-    @Value("${spring.mail.username}")
-    private String defaultFromEmail;
-
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
-    }
-
+    @Autowired
+    private JavaMailSender mailSender;
+    
     public void sendBookingConfirmation(Booking booking, String customerEmail) {
         try {
-            if (!isValidEmail(customerEmail)) {
-                System.err.println("Skipped sending booking confirmation: invalid recipient email " + customerEmail);
-                return;
-            }
-
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-
+            
             helper.setTo(customerEmail);
-            helper.setFrom(resolveFromAddress());
             helper.setSubject("🎉 Booking Confirmation - " + booking.getBookingReference());
             helper.setText(createBookingConfirmationHtml(booking), true);
             
@@ -64,14 +51,8 @@ public class EmailService {
     
     public void sendBookingCancellation(Booking booking, String customerEmail) {
         try {
-            if (!isValidEmail(customerEmail)) {
-                System.err.println("Skipped sending booking cancellation: invalid recipient email " + customerEmail);
-                return;
-            }
-
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(customerEmail);
-            message.setFrom(resolveFromAddress());
             message.setSubject("Booking Cancellation - " + booking.getBookingReference());
             message.setText(createBookingCancellationText(booking));
             mailSender.send(message);
@@ -82,14 +63,8 @@ public class EmailService {
     
     public void sendCheckInReminder(Booking booking, String customerEmail) {
         try {
-            if (!isValidEmail(customerEmail)) {
-                System.err.println("Skipped sending check-in reminder: invalid recipient email " + customerEmail);
-                return;
-            }
-
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(customerEmail);
-            message.setFrom(resolveFromAddress());
             message.setSubject("Check-in Reminder - " + booking.getBookingReference());
             message.setText(createCheckInReminderText(booking));
             mailSender.send(message);
@@ -250,11 +225,6 @@ public class EmailService {
      */
     public void sendBookingConfirmationWithQR(Booking booking, String customerEmail, String qrCodeBase64) {
         try {
-            if (!isValidEmail(customerEmail)) {
-                System.err.println("Skipped sending payment confirmation: invalid recipient email " + customerEmail);
-                return;
-            }
-
             System.out.println("🔄 Starting email sending process...");
             System.out.println("📧 Customer email: " + customerEmail);
             System.out.println("🎫 Booking reference: " + booking.getBookingReference());
@@ -265,7 +235,7 @@ public class EmailService {
             
             helper.setTo(customerEmail);
             helper.setSubject("✅ Payment Confirmed - Booking " + booking.getBookingReference());
-            helper.setFrom(resolveFromAddress());
+            helper.setFrom("goldpalmhotelsliit@gmail.com");
             
             System.out.println("📝 Creating email content...");
             String emailContent = createPaymentConfirmationHtml(booking, qrCodeBase64);
@@ -521,23 +491,5 @@ public class EmailService {
             booking.getCheckOutDate(),
             booking.getNumberOfGuests()
         );
-    }
-
-    private boolean isValidEmail(String email) {
-        if (!StringUtils.hasText(email)) {
-            return false;
-        }
-
-        String emailRegex = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$";
-        return email.toUpperCase().matches(emailRegex);
-    }
-
-    private String resolveFromAddress() {
-        if (StringUtils.hasText(defaultFromEmail)) {
-            return defaultFromEmail.trim();
-        }
-
-        System.err.println("Warning: spring.mail.username is not configured. Using fallback noreply@localhost");
-        return "noreply@localhost";
     }
 }
