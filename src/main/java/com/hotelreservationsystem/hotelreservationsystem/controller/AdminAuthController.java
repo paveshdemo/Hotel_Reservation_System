@@ -23,9 +23,6 @@ public class AdminAuthController {
     private RoomRepository roomRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -82,11 +79,12 @@ public class AdminAuthController {
             long pendingBookings = bookingRepository.countByBookingStatus(BookingStatus.PENDING);
             long totalRooms = roomRepository.count();
             long availableRooms = roomRepository.countByStatus(RoomStatus.AVAILABLE);
-            long totalCustomers = customerRepository.count();
+            long totalCustomers = userRepository.countByUserRole(UserRole.CUSTOMER);
             long activePromotions = promotionRepository.countByIsActiveTrue();
-            long totalStaff = userRepository.countByUserRole(UserRole.ADMIN)
-                    + userRepository.countByUserRole(UserRole.STAFF)
-                    + userRepository.countByUserRole(UserRole.RECEPTIONIST);
+            long totalStaff = java.util.Arrays.stream(UserRole.values())
+                    .filter(UserRole::isStaffRole)
+                    .mapToLong(userRepository::countByUserRole)
+                    .sum();
 
             // Calculate total revenue from completed bookings
             BigDecimal totalRevenue = paymentRepository.findAll().stream()
