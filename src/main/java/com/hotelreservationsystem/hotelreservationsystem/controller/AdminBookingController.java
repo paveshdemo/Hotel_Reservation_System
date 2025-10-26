@@ -3,7 +3,6 @@ package com.hotelreservationsystem.hotelreservationsystem.controller;
 import com.hotelreservationsystem.hotelreservationsystem.model.Booking;
 import com.hotelreservationsystem.hotelreservationsystem.model.BookingStatus;
 import com.hotelreservationsystem.hotelreservationsystem.model.Room;
-import com.hotelreservationsystem.hotelreservationsystem.model.RoomStatus;
 import com.hotelreservationsystem.hotelreservationsystem.model.User;
 import com.hotelreservationsystem.hotelreservationsystem.repository.BookingRepository;
 import com.hotelreservationsystem.hotelreservationsystem.repository.RoomRepository;
@@ -12,10 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,9 +31,6 @@ public class AdminBookingController {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final NotificationService notificationService;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Autowired
     public AdminBookingController(BookingRepository bookingRepository, RoomRepository roomRepository, NotificationService notificationService) {
@@ -79,6 +73,7 @@ public class AdminBookingController {
         }
 
         // CREATE NOTIFICATION FOR CUSTOMER
+        User recipient = booking.getCustomer() != null ? booking.getCustomer().getUser() : null;
         String message = String.format(
                 "Your booking for Room %s from %s to %s has been approved!",
                 room != null ? room.getRoomNumber() : "N/A",
@@ -129,6 +124,7 @@ public class AdminBookingController {
             }
         }
 
+        User recipient = booking.getCustomer() != null ? booking.getCustomer().getUser() : null;
         String message = String.format(
                 "Your booking for Room %s from %s to %s has been cancelled.",
                 room != null ? room.getRoomNumber() : "N/A",
@@ -141,11 +137,5 @@ public class AdminBookingController {
 
         redirectAttributes.addFlashAttribute("successMessage", "Booking cancelled successfully!");
         return "redirect:/admin/bookings";
-    }
-
-    private void detachBookingEntity(Booking booking) {
-        if (booking != null && entityManager != null && entityManager.contains(booking)) {
-            entityManager.detach(booking);
-        }
     }
 }
