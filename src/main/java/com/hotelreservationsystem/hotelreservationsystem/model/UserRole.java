@@ -25,7 +25,19 @@ public enum UserRole {
     }
 
     public static Set<UserRole> getAssignableStaffRoles() {
-        return STAFF_ROLES;
+        return ADMIN_AND_STAFF_ROLES;
+    }
+
+    public String getDisplayName() {
+        return switch (this) {
+            case ADMIN -> "Admin";
+            case STAFF -> "Staff";
+            case RECEPTIONIST -> "Receptionist";
+            case ACCOUNTANT -> "Accountant";
+            case MARKETING -> "Marketing";
+            case HOUSEKEEPING -> "Housekeeping";
+            case CUSTOMER -> "Customer";
+        };
     }
 
     public String getDisplayName() {
