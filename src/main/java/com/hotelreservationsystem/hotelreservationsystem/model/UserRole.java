@@ -14,8 +14,6 @@ public enum UserRole {
     CUSTOMER;
 
     private static final Set<UserRole> STAFF_ROLES = Collections.unmodifiableSet(EnumSet.of(
-            ADMIN,
-            STAFF,
             RECEPTIONIST,
             ACCOUNTANT,
             MARKETING,
