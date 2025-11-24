@@ -146,6 +146,43 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}/update-status")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> updateBookingStatus(@PathVariable Long id,
+                                                                   @RequestBody Map<String, String> statusData,
+                                                                   Authentication authentication) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String status = statusData.get("status");
+            System.out.println("🔄 Update booking status request for ID: " + id + ", status: " + status);
+            
+            // Verify user owns this booking
+            String userEmail = authentication.getName();
+            BookingResponseDTO existingBooking = bookingService.getBookingById(id);
+            
+            if (!existingBooking.getCustomerEmail().equals(userEmail)) {
+                System.out.println("❌ Access denied for status update");
+                response.put("success", false);
+                response.put("error", "You can only update your own bookings");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            BookingStatus bookingStatus = BookingStatus.valueOf(status);
+            BookingResponseDTO updatedBooking = bookingService.updateBookingStatus(id, bookingStatus);
+            
+            response.put("success", true);
+            response.put("message", "Booking status updated successfully");
+            response.put("booking", updatedBooking);
+            System.out.println("✅ Booking status updated to: " + status);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("❌ Error updating booking status: " + e.getMessage());
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @PostMapping("/{id}/update")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> updateBookingPost(@PathVariable Long id,

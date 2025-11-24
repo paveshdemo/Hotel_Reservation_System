@@ -20,10 +20,14 @@ import javax.imageio.ImageIO;
 @Service
 public class EmailService {
     
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
     
     public void sendBookingConfirmation(Booking booking, String customerEmail) {
+        if (mailSender == null) {
+            System.out.println("Email service not configured. Skipping email for: " + customerEmail);
+            return;
+        }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -50,6 +54,10 @@ public class EmailService {
     }
     
     public void sendBookingCancellation(Booking booking, String customerEmail) {
+        if (mailSender == null) {
+            System.out.println("Email service not configured. Skipping cancellation email for: " + customerEmail);
+            return;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(customerEmail);
@@ -62,6 +70,10 @@ public class EmailService {
     }
     
     public void sendCheckInReminder(Booking booking, String customerEmail) {
+        if (mailSender == null) {
+            System.out.println("Email service not configured. Skipping reminder email for: " + customerEmail);
+            return;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(customerEmail);

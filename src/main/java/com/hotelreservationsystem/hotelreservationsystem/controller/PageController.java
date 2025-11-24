@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -249,6 +250,7 @@ public class PageController {
     }
 
     // Payment page
+    @Transactional
     @GetMapping("/payment")
     public String payment(Model model,
                           @RequestParam(value = "bookingId", required = false) Long bookingId,
@@ -259,9 +261,6 @@ public class PageController {
         System.err.println("Payment: Processing request for bookingId: " + bookingId);
         System.err.println("Payment: Request URL: " + request.getRequestURL());
         System.err.println("Payment: Query String: " + request.getQueryString());
-        System.err.println("Payment: Referer: " + request.getHeader("Referer"));
-        System.err.println("Payment: User-Agent: " + request.getHeader("User-Agent"));
-        System.err.println("Payment: Method: " + request.getMethod());
 
         try {
             // Check if user is logged in
@@ -274,17 +273,33 @@ public class PageController {
             System.err.println("Payment: Authenticated user: " + userEmail);
 
             if (bookingId != null) {
-                model.addAttribute("bookingId", bookingId);
-                System.err.println("Payment: Added bookingId to model: " + bookingId);
+                try {
+                    // Fetch booking data from database
+                    var booking = bookingService.getBookingEntity(bookingId);
+                    
+                    // Verify that the booking belongs to the authenticated user
+                    if (!booking.getCustomer().getEmail().equals(userEmail)) {
+                        System.err.println("Payment: Access denied - booking does not belong to user");
+                        return "redirect:/my-bookings?error=access_denied";
+                    }
+                    
+                    model.addAttribute("bookingId", bookingId);
+                    model.addAttribute("booking", booking);
+                    System.err.println("Payment: Added booking to model");
+                    
+                } catch (Exception e) {
+                    System.err.println("Payment: Error loading booking: " + e.getMessage());
+                    e.printStackTrace();
+                    return "redirect:/my-bookings?error=booking_not_found";
+                }
             } else {
                 System.err.println("Payment: No bookingId provided in request");
+                return "redirect:/my-bookings?error=no_booking_id";
             }
 
             // Add base URL for payment endpoints
             String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
             model.addAttribute("baseUrl", baseUrl);
-            System.err.println("Payment: Added baseUrl to model: " + baseUrl);
-
             System.err.println("Payment: Returning payment template");
             return "payment";
             
@@ -292,6 +307,108 @@ public class PageController {
             System.err.println("Payment: Exception occurred: " + e.getMessage());
             e.printStackTrace();
             throw e;
+        }
+    }
+
+    // Payment Success page
+    @GetMapping("/payment-success")
+    public String paymentSuccess(Model model,
+                                  @RequestParam(value = "bookingId", required = false) Long bookingId,
+                                  Authentication authentication) {
+
+        System.out.println("Payment Success: Processing request for bookingId: " + bookingId);
+
+        try {
+            // Check if user is logged in
+            if (authentication == null || !authentication.isAuthenticated()) {
+                System.out.println("Payment Success: User not authenticated, redirecting to login");
+                return "redirect:/auth/login";
+            }
+
+            String userEmail = authentication.getName();
+            System.out.println("Payment Success: Authenticated user: " + userEmail);
+
+            if (bookingId != null) {
+                try {
+                    var booking = bookingService.getBookingEntity(bookingId);
+                    
+                    // Verify that the booking belongs to the authenticated user
+                    if (!booking.getCustomer().getEmail().equals(userEmail)) {
+                        System.out.println("Payment Success: Access denied - booking does not belong to user");
+                        return "redirect:/my-bookings?error=access_denied";
+                    }
+                    
+                    model.addAttribute("booking", booking);
+                    System.out.println("Payment Success: Added booking to model");
+                    
+                } catch (Exception e) {
+                    System.out.println("Payment Success: Error loading booking: " + e.getMessage());
+                    e.printStackTrace();
+                    return "redirect:/my-bookings?error=booking_not_found";
+                }
+            } else {
+                System.out.println("Payment Success: No bookingId provided in request");
+                return "redirect:/my-bookings";
+            }
+
+            System.out.println("Payment Success: Returning payment-success template");
+            return "payment-success";
+            
+        } catch (Exception e) {
+            System.out.println("Payment Success: Exception occurred: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/my-bookings?error=error";
+        }
+    }
+
+    // Payment Pending page (for bank transfer)
+    @GetMapping("/payment-pending")
+    public String paymentPending(Model model,
+                                 @RequestParam(value = "bookingId", required = false) Long bookingId,
+                                 Authentication authentication) {
+
+        System.out.println("Payment Pending: Processing request for bookingId: " + bookingId);
+
+        try {
+            // Check if user is logged in
+            if (authentication == null || !authentication.isAuthenticated()) {
+                System.out.println("Payment Pending: User not authenticated, redirecting to login");
+                return "redirect:/auth/login";
+            }
+
+            String userEmail = authentication.getName();
+            System.out.println("Payment Pending: Authenticated user: " + userEmail);
+
+            if (bookingId != null) {
+                try {
+                    var booking = bookingService.getBookingEntity(bookingId);
+                    
+                    // Verify that the booking belongs to the authenticated user
+                    if (!booking.getCustomer().getEmail().equals(userEmail)) {
+                        System.out.println("Payment Pending: Access denied - booking does not belong to user");
+                        return "redirect:/my-bookings?error=access_denied";
+                    }
+                    
+                    model.addAttribute("booking", booking);
+                    System.out.println("Payment Pending: Added booking to model");
+                    
+                } catch (Exception e) {
+                    System.out.println("Payment Pending: Error loading booking: " + e.getMessage());
+                    e.printStackTrace();
+                    return "redirect:/my-bookings?error=booking_not_found";
+                }
+            } else {
+                System.out.println("Payment Pending: No bookingId provided in request");
+                return "redirect:/my-bookings";
+            }
+
+            System.out.println("Payment Pending: Returning payment-pending template");
+            return "payment-pending";
+            
+        } catch (Exception e) {
+            System.out.println("Payment Pending: Exception occurred: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/my-bookings?error=error";
         }
     }
 

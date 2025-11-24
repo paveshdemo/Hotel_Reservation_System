@@ -384,10 +384,10 @@ function submitBooking() {
     .then(data => {
         hideLoading();
         if (data.bookingId) {
-            // Store booking data for payment
-            sessionStorage.setItem('bookingData', JSON.stringify(data));
-            // Redirect to payment
-            window.location.href = '/payment';
+            // Store booking data for payment using the key expected by the payment page
+            sessionStorage.setItem('pendingBooking', JSON.stringify(data));
+            // Redirect to payment including bookingId so the payment page can fetch server-side data
+            window.location.href = '/payment?bookingId=' + data.bookingId;
         } else {
             showAlert(data.error || 'Error creating booking', 'error');
         }

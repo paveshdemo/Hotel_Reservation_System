@@ -575,4 +575,20 @@ public class BookingService {
         // Apply the promotion to the booking
         promotionService.applyPromoCode(promoCode, booking, customer);
     }
+
+    /**
+     * Save or update a booking
+     */
+    public Booking saveBooking(Booking booking) {
+        System.out.println("BookingService: Saving booking with ID " + booking.getBookingId());
+        return bookingRepository.save(booking);
+    }
+
+    /**
+     * Get booking entity by ID
+     */
+    public Booking getBookingEntity(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
+    }
 }

@@ -1,1073 +1,861 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
 <head>
-    <title>Payment - Hotel Reservation System</title>
+    <title>Payment - Golden Palm Hotel</title>
 </head>
 <body>
-    <div th:fragment="content">
-        <!-- Inline script for immediate execution test -->
-        <script>
-            console.log('🔥 PAYMENT PAGE CONTENT LOADED - Inline script executing');
-            console.log('Current URL:', window.location.href);
-            console.log('URL Params:', window.location.search);
-        </script>
-        
-        <!-- Hero Section -->
-        <section class="hero-section" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/banner/pay.jpg') center/cover no-repeat;">
-            <div class="container">
-                <div class="text-center">
-                    <div class="fade-in-up">
-                        <h1 class="display-4 mb-6 text-golden">
-                            <i class="fas fa-credit-card me-3"></i>
-                            Secure Payment
-                        </h1>
-                    </div>
-                    <div class="fade-in-up" style="animation-delay: 0.2s;">
-                        <p class="lead mb-8">
-                            Complete your payment to confirm your booking at Golden Palm Hotel
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
+<div th:fragment="content">
+    <!-- Hero Section -->
+    <section class="hero-section" style="background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/banner/booking-details.jpg') center/cover no-repeat;">
         <div class="container">
-            
-            <!-- Payment Container -->
-            <div class="booking-container">
-                <!-- Payment Form -->
-                <div class="card shadow-glow">
-                    <div class="card-header">
-                        <h2 class="mb-0">
-                            <i class="fas fa-credit-card text-golden me-3"></i>
-                            Payment Information
-                        </h2>
-                    </div>
-                    <div class="card-body">
-                        <!-- Booking Information Display -->
-                        <div id="bookingInfo" class="mb-3">
-                            <h3 class="text-golden mb-3"><i class="fas fa-clipboard-check me-2"></i>Booking Confirmation</h3>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div id="bookingInfoPlaceholder" class="text-center">
-                                        <p>Loading booking information...</p>
-                                        <div class="spinner"></div>
-                                    </div>
-                                    <div id="bookingDetails" style="display: none;">
-                                        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                            <div>
-                                                <p><strong>Booking Reference:</strong> <span id="bookingReference">-</span></p>
-                                                <p><strong>Room:</strong> <span id="roomDetails">-</span></p>
-                                                <p><strong>Guest Name:</strong> <span id="guestName">-</span></p>
-                                            </div>
-                                            <div>
-                                                <p><strong>Check-in:</strong> <span id="checkInDisplay">-</span></p>
-                                                <p><strong>Check-out:</strong> <span id="checkOutDisplay">-</span></p>
-                                                <p><strong>Duration:</strong> <span id="durationDisplay">-</span></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Payment Method Selection -->
-                        <div class="form-group">
-                            <h3 class="text-golden mb-3"><i class="fas fa-wallet me-2"></i>Select Payment Method</h3>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="payment-method-card selected" data-method="CREDIT_CARD" onclick="selectPaymentMethod('CREDIT_CARD')">
-                                        <div class="payment-method-icon">
-                                            <i class="fas fa-credit-card"></i>
-                                        </div>
-                                        <h4>Credit/Debit Card</h4>
-                                        <p class="mb-2">Secure online payment</p>
-                                        <small>Visa, Mastercard, American Express</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="payment-method-card" data-method="BANK_TRANSFER" onclick="selectPaymentMethod('BANK_TRANSFER')">
-                                        <div class="payment-method-icon">
-                                            <i class="fas fa-university"></i>
-                                        </div>
-                                        <h4>Bank Transfer</h4>
-                                        <p class="mb-2">Direct bank transfer</p>
-                                        <small>Manual verification required</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="payment-method-card" data-method="CASH" onclick="selectPaymentMethod('CASH')">
-                                        <div class="payment-method-icon">
-                                            <i class="fas fa-money-bill-wave"></i>
-                                        </div>
-                                        <h4>Pay at Hotel</h4>
-                                        <p class="mb-2">Pay upon arrival</p>
-                                        <small>Cash or card at reception</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Credit Card Payment Form -->
-                        <div id="creditCardPaymentSection" class="form-group">
-                            <h3 class="text-golden mb-3"><i class="fas fa-credit-card me-2"></i>Credit/Debit Card Payment</h3>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <strong><i class="fas fa-lock me-1"></i>Secure Payment:</strong> Your payment is processed securely. We do not store your card details on our servers.
-                                    </div>
-                                    
-                                    <form id="creditCardPaymentForm" novalidate>
-                                        <!-- CSRF Token -->
-                                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
-                                        <input type="hidden" id="bookingReferenceField" name="bookingReference">
-                                        <input type="hidden" id="paymentAmountField" name="amount">
-                                        
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="cardholderName">Cardholder Name *</label>
-                                                    <input type="text" id="cardholderName" name="cardholderName" 
-                                                           class="form-control" required 
-                                                           placeholder="John Doe"
-                                                           pattern="[A-Za-z\s]{2,50}"
-                                                           title="Please enter the name as it appears on your card">
-                                                    <div class="invalid-feedback">Please enter cardholder name (2-50 characters)</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="cardNumber">Card Number *</label>
-                                                    <input type="text" id="cardNumber" name="cardNumber" 
-                                                           class="form-control" required 
-                                                           placeholder="1234 5678 9012 3456"
-                                                           maxlength="19"
-                                                           pattern="[0-9\s]{13,19}"
-                                                           title="Please enter a valid card number">
-                                                    <div class="invalid-feedback">Please enter a valid card number</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="expiryDate">Expiry Date *</label>
-                                                    <input type="text" id="expiryDate" name="expiryDate" 
-                                                           class="form-control" required 
-                                                           placeholder="MM/YY"
-                                                           maxlength="5"
-                                                           pattern="(0[1-9]|1[0-2])\/\d{2}"
-                                                           title="Please enter expiry date in MM/YY format">
-                                                    <div class="invalid-feedback">Please enter expiry date (MM/YY)</div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="cvv">CVV *</label>
-                                                    <input type="text" id="cvv" name="cvv" 
-                                                           class="form-control" required 
-                                                           placeholder="123"
-                                                           maxlength="4"
-                                                           pattern="\d{3,4}"
-                                                           title="Please enter the 3 or 4 digit CVV code">
-                                                    <div class="invalid-feedback">Please enter CVV (3-4 digits)</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Payment Summary in Form -->
-                                        <div class="payment-form-summary">
-                                            <h4>Payment Summary</h4>
-                                            <div class="summary-item">
-                                                <span>Total Amount:</span>
-                                                <span id="paymentAmount" class="total-amount">LKR 0.00</span>
-                                            </div>
-                                            <div class="summary-item">
-                                                <span>Payment Method:</span>
-                                                <span>Credit/Debit Card</span>
-                                            </div>
-                                            <div class="summary-item">
-                                                <span>Processing Fee:</span>
-                                                <span>Included</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-check mt-3">
-                                            <input type="checkbox" id="termsAccepted" class="form-check-input" required>
-                                            <label for="termsAccepted" class="form-check-label">
-                                                I agree to the <a href="/terms" target="_blank">Terms and Conditions</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
-                                            </label>
-                                            <div class="invalid-feedback">You must accept the terms and conditions</div>
-                                        </div>
-                                        
-                                        <div class="mt-3">
-                                            <button type="submit" id="payNowBtn" class="btn btn-payment-process form-control" disabled>
-                                                <i class="fas fa-lock me-2"></i>
-                                                <span>Process Payment Securely</span>
-                                            </button>
-                                            <div id="paymentProgress" class="mt-2" style="display: none;">
-                                                <div class="spinner"></div>
-                                                <span>Processing payment...</span>
-                                            </div>
-                                            <small class="text-muted d-block mt-2 text-center">
-                                                <i class="fas fa-info-circle me-1"></i>
-                                                Fill all fields and accept terms to enable payment
-                                            </small>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Bank Transfer Instructions -->
-                        <div id="bankTransferSection" class="form-group" style="display: none;">
-                            <h3 class="text-golden mb-3"><i class="fas fa-university me-2"></i>Bank Transfer Details</h3>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="alert alert-warning">
-                                        <strong><i class="fas fa-exclamation-triangle me-1"></i>Important:</strong> Your booking will be on hold until payment is verified. Please transfer the exact amount and send proof of payment.
-                                    </div>
-                                    
-                                    <h4>Bank Details:</h4>
-                                    <div class="bank-details">
-                                        <p><strong>Bank:</strong> Commercial Bank of Ceylon PLC</p>
-                                        <p><strong>Account Name:</strong> Gold Palm Hotel (Pvt) Ltd</p>
-                                        <p><strong>Account Number:</strong> 8001234567890</p>
-                                        <p><strong>Branch:</strong> Colombo Main Branch</p>
-                                        <p><strong>SWIFT Code:</strong> CCEYLKLX</p>
-                                    </div>
-                                    
-                                    <h4 class="mt-3">Transfer Instructions:</h4>
-                                    <ol>
-                                        <li>Transfer the exact amount: <strong id="bankTransferAmount">LKR 0.00</strong></li>
-                                        <li>Use booking reference <strong id="bankTransferReference">-</strong> as the transfer reference</li>
-                                        <li>Email proof of payment to: <strong>payments@goldpalmhotel.com</strong></li>
-                                        <li>Include your booking reference in the email subject</li>
-                                    </ol>
-                                    
-                                    <div class="mt-3">
-                                        <button type="button" id="confirmBankTransferBtn" class="btn btn-primary form-control" onclick="confirmBankTransfer()">
-                                            <i class="fas fa-envelope me-2"></i>I will transfer the amount and send proof
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Cash Payment Section -->
-                        <div id="cashPaymentSection" class="form-group" style="display: none;">
-                            <h3 class="text-golden mb-3"><i class="fas fa-money-bill-wave me-2"></i>Pay at Hotel</h3>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <strong><i class="fas fa-lightbulb me-1"></i>Payment at Hotel:</strong> You can pay when you arrive at the hotel. Your booking will be held for 24 hours.
-                                    </div>
-                                    
-                                    <h4>Payment Information:</h4>
-                                    <ul>
-                                        <li>Amount to pay: <strong id="cashPaymentAmount">LKR 0.00</strong></li>
-                                        <li>Payment methods accepted: Cash, Credit Card, Debit Card</li>
-                                        <li>Pay at the reception desk during check-in</li>
-                                        <li>Booking reference: <strong id="cashPaymentReference">-</strong></li>
-                                    </ul>
-                                    
-                                    <div class="alert alert-warning">
-                                        <strong><i class="fas fa-exclamation-triangle me-1"></i>Important:</strong>
-                                        <ul class="mb-0">
-                                            <li>Your booking will be automatically cancelled if payment is not made within 24 hours of arrival</li>
-                                            <li>Please bring a valid government-issued photo ID</li>
-                                            <li>Late arrivals (after 10 PM) should inform the hotel in advance</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="mt-3">
-                                        <button type="button" id="confirmCashPaymentBtn" class="btn btn-success form-control" onclick="confirmCashPayment()">
-                                            <i class="fas fa-check-circle me-2"></i>Confirm Booking - Pay at Hotel
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Terms and Security Info -->
-                        <div class="form-group">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h4 class="text-golden mb-3"><i class="fas fa-shield-alt me-2"></i>Security & Terms</h4>
-                                    <div style="font-size: 0.9rem; line-height: 1.4;">
-                                        <p><strong>Security:</strong> All payments are processed through SSL encrypted connections. Your card details are never stored on our servers.</p>
-                                        <p><strong>Refunds:</strong> Cancellations made 24+ hours before check-in are eligible for full refund. Processing time: 3-5 business days.</p>
-                                        <p><strong>Booking Policy:</strong> By proceeding with payment, you agree to our terms and conditions and cancellation policy.</p>
-                                        <p><strong>Support:</strong> For payment issues, contact us at <strong>support@goldpalmhotel.com</strong> or <strong>+94 11 1234567</strong></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="text-center">
+                <div class="fade-in-up">
+                    <h1 class="display-4 mb-6 text-golden">
+                        <i class="fas fa-credit-card me-3"></i>
+                        Secure Payment
+                    </h1>
                 </div>
-                
-                <!-- Payment Summary Sidebar -->
-                <div class="booking-summary card shadow-glow">
-                    <div class="card-header">
-                        <h3 class="mb-0 text-golden"><i class="fas fa-file-invoice-dollar me-2"></i>Payment Summary</h3>
+                <div class="fade-in-up" style="animation-delay: 0.2s;">
+                    <p class="lead mb-8">
+                        Complete your booking with our secure payment gateway
+                    </p>
+                    <div th:if="${booking != null}" class="d-inline-block">
+                        <span class="badge bg-golden text-dark fs-6 px-4 py-2">
+                            <i class="fas fa-hashtag me-2"></i>Booking Reference: <span th:text="${booking.bookingReference}">BK123456</span>
+                        </span>
                     </div>
-                    <div class="card-body">
-                        <div id="paymentSummaryContent">
-                        <div id="paymentSummaryPlaceholder" class="text-center">
-                            <p>Loading payment details...</p>
-                            <div class="spinner"></div>
-                        </div>
-                        
-                        <div id="paymentSummaryDetails" style="display: none;">
-                            <!-- Room Details -->
-                            <div class="summary-section">
-                                <h4><i class="fas fa-hotel me-2 text-golden"></i>Booking Details</h4>
-                                <div class="summary-item">
-                                    <span>Room:</span>
-                                    <span id="summaryRoomType">-</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Dates:</span>
-                                    <span id="summaryDates">-</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Guests:</span>
-                                    <span id="summaryGuests">-</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Duration:</span>
-                                    <span id="summaryNights">-</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Price Breakdown -->
-                            <div class="summary-section">
-                                <h4><i class="fas fa-calculator me-2 text-golden"></i>Price Breakdown</h4>
-                                <div class="summary-item">
-                                    <span>Room rate:</span>
-                                    <span id="summaryRoomRate">-</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Subtotal:</span>
-                                    <span id="summarySubtotal">-</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Service charge (10%):</span>
-                                    <span id="summaryServiceCharge">-</span>
-                                </div>
-                                <div class="summary-item">
-                                    <span>Taxes (2%):</span>
-                                    <span id="summaryTaxes">-</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Total -->
-                            <div class="total-amount">
-                                <div class="summary-item">
-                                    <span>Total Amount:</span>
-                                    <span id="summaryTotal">LKR 0.00</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Payment Security -->
-                            <div class="mt-2">
-                                <div class="alert alert-success" style="padding: 0.75rem; font-size: 0.9rem;">
-                                    <strong><i class="fas fa-lock me-1"></i>100% Secure</strong><br>
-                                    SSL encrypted<br>
-                                    PCI DSS compliant<br>
-                                    No card details stored
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                </div>
                 </div>
             </div>
         </div>
-</div>
-    
-    <!-- Additional JavaScript for payment page -->
-    <th:block th:fragment="additional-js">
-        <script>
-            console.log('🚀 PAYMENT ADDITIONAL-JS FRAGMENT LOADED');
-            console.log('Fragment loading at:', new Date().toISOString());
-            
-            let currentBookingData = null;
-            let selectedPaymentMethod = 'CREDIT_CARD';
-            
-            // Global error handler
-            window.addEventListener('error', function(e) {
-                console.error('JavaScript error on payment page:', e.error);
-                console.error('Error details:', e.filename, e.lineno, e.colno);
-            });
-            
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('=== PAYMENT PAGE INITIALIZATION ===');
-                console.log('Payment page DOM loaded, starting initialization');
-                console.log('Current URL:', window.location.href);
-                console.log('Pathname:', window.location.pathname);
-                
-                // Extra safety check - only run payment JavaScript if we're actually on payment page
-                if (window.location.pathname !== '/payment') {
-                    console.log('Payment JavaScript attempted to run on wrong page:', window.location.pathname);
-                    return;
-                }
-                
-                // Check if we have any indication that we should be on this page
-                const urlParams = new URLSearchParams(window.location.search);
-                const bookingId = urlParams.get('bookingId');
-                const pendingBooking = JSON.parse(sessionStorage.getItem('pendingBooking') || '{}');
-                
-                console.log('Booking ID from URL:', bookingId);
-                console.log('Pending booking from session:', pendingBooking);
-                
-                if (!bookingId && !pendingBooking.bookingId) {
-                    console.log('Payment page accessed without valid booking data');
-                    
-                    // Check for redirect loop
-                    const redirectCount = sessionStorage.getItem('redirectCount') || '0';
-                    const lastPage = sessionStorage.getItem('lastPage');
-                    
-                    if (lastPage === 'rooms' && parseInt(redirectCount) > 3) {
-                        console.log('Detected redirect loop from payment page, breaking');
-                        sessionStorage.clear();
-                        alert('There seems to be a navigation issue. Please refresh the page and try again.');
-                        return;
-                    }
-                    
-                    sessionStorage.setItem('lastPage', 'payment');
-                    sessionStorage.setItem('redirectCount', String(parseInt(redirectCount) + 1));
-                    
-                    console.log('Redirecting to rooms page');
-                    window.location.replace('/rooms');
-                    return;
-                }
-                
-                console.log('Payment page has valid booking data, proceeding with initialization');
-                
-                try {
-                    loadBookingData();
-                    initializePaymentMethods();
-                    console.log('Payment page initialization complete');
-                } catch (error) {
-                    console.error('Error during payment page initialization:', error);
-                }
-                
-                // The payment button will be enabled by form validation in the custom payment system
-            });
-            
-            function loadBookingData() {
-                console.log('Payment page: loadBookingData called');
-                console.log('Payment page: Current URL:', window.location.href);
-                console.log('Payment page: Referrer:', document.referrer);
-                
-                // Get booking ID from URL or session storage
-                const urlParams = new URLSearchParams(window.location.search);
-                const bookingId = urlParams.get('bookingId');
-                
-                console.log('Payment page: bookingId from URL:', bookingId);
-                
-                if (bookingId) {
-                    fetchBookingData(bookingId);
-                } else {
-                    // Try to get from session storage
-                    const pendingBooking = JSON.parse(sessionStorage.getItem('pendingBooking') || '{}');
-                    console.log('Payment page: pendingBooking from session:', pendingBooking);
-                    
-                    if (pendingBooking.bookingId) {
-                        fetchBookingData(pendingBooking.bookingId);
-                    } else {
-                        console.log('Payment page: No booking found in loadBookingData');
-                        // Don't show alert or redirect here as we already handled it above
-                        console.log('This should not happen if the pre-checks worked correctly');
-                    }
-                }
-            }
-            
-            function fetchBookingData(bookingId) {
-                console.log('=== FETCHING BOOKING DATA ===');
-                console.log('Payment page: Fetching booking data for ID:', bookingId);
-                console.log('Payment page: API URL:', `/api/bookings/${bookingId}`);
-                
-                fetch(`/api/bookings/${bookingId}`)
-                    .then(response => {
-                        console.log('Payment page: API response received');
-                        console.log('Payment page: Response status:', response.status);
-                        console.log('Payment page: Response ok:', response.ok);
-                        console.log('Payment page: Response headers:', response.headers);
-                        
-                        if (!response.ok) {
-                            throw new Error(`Booking not found (HTTP ${response.status})`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('=== BOOKING DATA RECEIVED ===');
-                        console.log('Payment page: Booking data:', data);
-                        console.log('Payment page: Booking Reference:', data.bookingReference);
-                        console.log('Payment page: Room Type:', data.roomType);
-                        console.log('Payment page: Room Number:', data.roomNumber);
-                        console.log('Payment page: Customer Name:', data.customerName);
-                        console.log('Payment page: Total Amount:', data.totalAmount);
-                        
-                        currentBookingData = data;
-                        displayBookingInfo(data);
-                        displayPaymentSummary(data);
-                        setupPaymentForm(data);
-                        
-                        console.log('=== BOOKING DATA DISPLAY COMPLETE ===');
-                    })
-                    .catch(error => {
-                        console.error('=== ERROR LOADING BOOKING ===');
-                        console.error('Error type:', error.name);
-                        console.error('Error message:', error.message);
-                        console.error('Error stack:', error.stack);
-                        
-                        // Show error to user
-                        document.getElementById('bookingInfoPlaceholder').innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Error loading booking information:</strong><br>
-                                ${error.message}<br>
-                                <small>Booking ID: ${bookingId}</small><br>
-                                <a href="/my-bookings" class="btn btn-sm btn-primary mt-2">View My Bookings</a>
-                            </div>
-                        `;
-                        
-                        document.getElementById('paymentSummaryPlaceholder').innerHTML = `
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Unable to load payment details
-                            </div>
-                        `;
-                    });
-            }
-            
-            function displayBookingInfo(booking) {
-                document.getElementById('bookingInfoPlaceholder').style.display = 'none';
-                document.getElementById('bookingDetails').style.display = 'block';
-                
-                document.getElementById('bookingReference').textContent = booking.bookingReference || '-';
-                document.getElementById('roomDetails').textContent = `${booking.roomNumber || '-'} (${booking.roomType || '-'})`;
-                document.getElementById('guestName').textContent = booking.customerName || '-';
-                document.getElementById('checkInDisplay').textContent = formatDate(booking.checkInDate);
-                document.getElementById('checkOutDisplay').textContent = formatDate(booking.checkOutDate);
-                document.getElementById('durationDisplay').textContent = `${booking.numberOfNights} night${booking.numberOfNights !== 1 ? 's' : ''}`;
-            }
-            
-            function displayPaymentSummary(booking) {
-                document.getElementById('paymentSummaryPlaceholder').style.display = 'none';
-                document.getElementById('paymentSummaryDetails').style.display = 'block';
-                
-                const subtotal = parseFloat(booking.roomPricePerNight) * parseInt(booking.numberOfNights);
-                const serviceCharge = subtotal * 0.10;
-                const taxes = subtotal * 0.02;
-                
-                document.getElementById('summaryRoomType').textContent = booking.roomType || '-';
-                document.getElementById('summaryDates').textContent = `${formatDateShort(booking.checkInDate)} - ${formatDateShort(booking.checkOutDate)}`;
-                document.getElementById('summaryGuests').textContent = `${booking.numberOfGuests} guest${booking.numberOfGuests !== 1 ? 's' : ''}`;
-                document.getElementById('summaryNights').textContent = `${booking.numberOfNights} night${booking.numberOfNights !== 1 ? 's' : ''}`;
-                document.getElementById('summaryRoomRate').textContent = `${formatCurrency(booking.roomPricePerNight)} × ${booking.numberOfNights}`;
-                document.getElementById('summarySubtotal').textContent = formatCurrency(subtotal);
-                document.getElementById('summaryServiceCharge').textContent = formatCurrency(serviceCharge);
-                document.getElementById('summaryTaxes').textContent = formatCurrency(taxes);
-                document.getElementById('summaryTotal').textContent = formatCurrency(booking.totalAmount);
-                
-                // Update all amount displays
-                document.getElementById('paymentAmount').textContent = formatCurrency(booking.totalAmount);
-                document.getElementById('bankTransferAmount').textContent = formatCurrency(booking.totalAmount);
-                document.getElementById('cashPaymentAmount').textContent = formatCurrency(booking.totalAmount);
-                document.getElementById('bankTransferReference').textContent = booking.bookingReference;
-                document.getElementById('cashPaymentReference').textContent = booking.bookingReference;
-            }
-            
-            function setupPaymentForm(booking) {
-                console.log('Payment page: Setting up custom payment form with booking:', booking);
-                
-                // Setup custom payment form
-                document.getElementById('bookingReferenceField').value = booking.bookingReference;
-                document.getElementById('paymentAmountField').value = booking.totalAmount.toFixed(2);
-                
-                console.log('Payment page: Custom payment form fields populated');
-                
-                // Payment button will be enabled by form validation
-                console.log('Payment page: Payment form ready');
-            }
-            
-            function initializePaymentMethods() {
-                selectPaymentMethod('CREDIT_CARD');
-                setupCreditCardForm();
-            }
-            
-            function selectPaymentMethod(method) {
-                selectedPaymentMethod = method;
+    </section>
 
-                // Update UI
-                document.querySelectorAll('.payment-method-card').forEach(el => {
-                    el.classList.remove('selected');
-                });
-                document.querySelector(`[data-method="${method}"]`).classList.add('selected');
-                
-                // Show/hide payment sections
-                document.getElementById('creditCardPaymentSection').style.display = method === 'CREDIT_CARD' ? 'block' : 'none';
-                document.getElementById('bankTransferSection').style.display = method === 'BANK_TRANSFER' ? 'block' : 'none';
-                document.getElementById('cashPaymentSection').style.display = method === 'CASH' ? 'block' : 'none';
+    <!-- Navigation -->
+    <section class="py-3">
+        <div class="container">
+            <a href="/my-bookings" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to My Bookings
+            </a>
+        </div>
+    </section>
+
+    <!-- Main Payment Content -->
+    <section class="py-5" th:if="${booking != null}">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Left Column - Booking Summary -->
+                <div class="col-lg-8">
+                    <!-- Booking Details Card -->
+                    <div class="card shadow-glow mb-4">
+                        <div class="card-header">
+                            <h2 class="mb-0">
+                                <i class="fas fa-info-circle text-golden me-3"></i>
+                                Booking Summary
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <!-- Room Information -->
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="me-3">
+                                            <i class="fas fa-bed text-golden fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Room</h6>
+                                            <p class="mb-0 fw-bold" th:text="${booking.room.roomType.typeName} + ' (Room ' + ${booking.room.roomNumber} + ')'">Deluxe Room</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Guest Information -->
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="me-3">
+                                            <i class="fas fa-user text-golden fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Guest Name</h6>
+                                            <p class="mb-0 fw-bold" th:text="${booking.customer.user.firstName} + ' ' + ${booking.customer.user.lastName}">John Doe</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Check-in Date -->
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="me-3">
+                                            <i class="fas fa-sign-in-alt text-success fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Check-In Date</h6>
+                                            <p class="mb-0 fw-bold" th:text="${#temporals.format(booking.checkInDate, 'MMM dd, yyyy')}">Jan 01, 2024</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Check-out Date -->
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="me-3">
+                                            <i class="fas fa-sign-out-alt text-danger fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Check-Out Date</h6>
+                                            <p class="mb-0 fw-bold" th:text="${#temporals.format(booking.checkOutDate, 'MMM dd, yyyy')}">Jan 03, 2024</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Number of Nights -->
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="me-3">
+                                            <i class="fas fa-moon text-warning fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Number of Nights</h6>
+                                            <p class="mb-0 fw-bold" th:text="${booking.numberOfNights} + ' night(s)'">2 nights</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Number of Guests -->
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="me-3">
+                                            <i class="fas fa-users text-info fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1">Number of Guests</h6>
+                                            <p class="mb-0 fw-bold" th:text="${booking.numberOfGuests} + ' guest(s)'">2 guests</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Card -->
+                    <div class="card shadow-glow mb-4">
+                        <div class="card-header">
+                            <h2 class="mb-0">
+                                <i class="fas fa-credit-card text-golden me-3"></i>
+                                Payment Methods
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <!-- Payment Method Selection -->
+                            <div class="row g-3 mb-4">
+                                <!-- Credit Card Option -->
+                                <div class="col-md-6">
+                                    <div class="payment-method-card" data-method="CREDIT_CARD" onclick="selectPaymentMethod('CREDIT_CARD')">
+                                        <div class="text-center p-4">
+                                            <i class="fas fa-credit-card fa-2x text-golden mb-3"></i>
+                                            <h5>Credit/Debit Card</h5>
+                                            <p class="text-muted small">Visa, Mastercard, AmEx</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bank Transfer Option -->
+                                <div class="col-md-6">
+                                    <div class="payment-method-card" data-method="BANK_TRANSFER" onclick="selectPaymentMethod('BANK_TRANSFER')">
+                                        <div class="text-center p-4">
+                                            <i class="fas fa-university fa-2x text-golden mb-3"></i>
+                                            <h5>Bank Transfer</h5>
+                                            <p class="text-muted small">Direct bank payment</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Credit Card Form -->
+                            <div id="creditCardForm" style="display: none;">
+                                <form id="paymentForm">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label">Cardholder Name</label>
+                                            <input type="text" class="form-control" id="cardholderName" placeholder="John Doe" required>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label class="form-label">Card Number</label>
+                                            <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" required maxlength="19">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">Expiry Date</label>
+                                            <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" required maxlength="5">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">CVV</label>
+                                            <input type="text" class="form-control" id="cvv" placeholder="123" required maxlength="4">
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="termsAccepted" required>
+                                                <label class="form-check-label" for="termsAccepted">
+                                                    I agree to the terms and conditions
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <button type="button" class="btn btn-golden w-100 py-3" onclick="processPayment()">
+                                                <i class="fas fa-lock me-2"></i>Pay Now - <span th:text="'LKR ' + ${booking.totalAmount}">LKR 5,000</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Bank Transfer Form -->
+                            <div id="bankTransferForm" style="display: none;">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Bank Transfer Details</strong>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="p-3 border rounded bg-dark">
+                                            <h6 class="mb-3">Transfer Instructions</h6>
+                                            <p><strong>Bank Name:</strong> Golden Palm Bank</p>
+                                            <p><strong>Account Number:</strong> 1234567890</p>
+                                            <p><strong>Branch Code:</strong> 001</p>
+                                            <p><strong>Amount to Transfer:</strong> <span class="text-golden fw-bold" th:text="'LKR ' + ${booking.totalAmount}">LKR 5,000</span></p>
+                                            <p><strong>Reference:</strong> <span class="text-golden fw-bold" th:text="${booking.bookingReference}">BK123456</span></p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Receipt Upload Section -->
+                                    <div class="col-12">
+                                        <div class="alert alert-warning border-start border-warning border-5">
+                                            <i class="fas fa-file-upload me-2"></i>
+                                            <strong>Upload Payment Receipt</strong>
+                                            <p class="small mt-2 mb-0">Please upload a screenshot or image of your payment receipt/confirmation to verify the transaction.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">
+                                            <i class="fas fa-image me-2"></i>Payment Proof Document
+                                        </label>
+                                        <div class="upload-area border-2 border-dashed rounded p-4 text-center" id="uploadArea" style="cursor: pointer; transition: all 0.3s;">
+                                            <input type="file" id="receiptFile" class="form-control d-none" accept="image/*,.pdf" required>
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3" style="display: block;"></i>
+                                            <h6>Click to upload or drag and drop</h6>
+                                            <p class="text-muted small">PNG, JPG, GIF or PDF (Max 5MB)</p>
+                                            <div id="fileInfo" style="display: none; margin-top: 10px;">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <span id="fileName"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="bankTermsAccepted" required>
+                                            <label class="form-check-label" for="bankTermsAccepted">
+                                                I confirm that I have uploaded the payment receipt and the information above is correct
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-golden w-100 py-3" onclick="processBankTransfer()">
+                                            <i class="fas fa-check me-2"></i>Confirm Bank Transfer & Submit Receipt
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Information -->
+                    <div class="alert alert-success">
+                        <i class="fas fa-lock me-2"></i>
+                        <strong>Secure Payment:</strong> Your payment information is encrypted and secure. We use industry-standard SSL encryption to protect your data.
+                    </div>
+                </div>
+
+                <!-- Right Column - Price Breakdown -->
+                <div class="col-lg-4">
+                    <div class="card shadow-glow sticky-top" style="top: 100px;">
+                        <div class="card-header">
+                            <h3 class="mb-0">
+                                <i class="fas fa-calculator text-golden me-2"></i>
+                                Price Breakdown
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Room Type -->
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Room Type:</span>
+                                <span class="text-golden fw-bold" th:text="${booking.room.roomType.typeName}">Deluxe Room</span>
+                            </div>
+
+                            <!-- Price per Night -->
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Price per Night:</span>
+                                <span class="text-golden fw-bold" th:text="'LKR ' + ${booking.roomPricePerNight}">LKR 2,500</span>
+                            </div>
+
+                            <!-- Number of Nights -->
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Number of Nights:</span>
+                                <span class="text-golden fw-bold" th:text="${booking.numberOfNights}">2</span>
+                            </div>
+
+                            <hr class="text-secondary">
+
+                            <!-- Price Breakdown with Explanations -->
+                            <div class="alert alert-info border-start border-info border-5 mb-4">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Price Breakdown
+                                </h6>
+                                <small class="text-muted">Here's how we calculated your total amount:</small>
+                            </div>
+
+                            <!-- Room Charges -->
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <span>Base Room Charges</span>
+                                    <br/>
+                                    <small class="text-muted"><span th:text="${booking.numberOfNights}">3</span> nights × <span th:text="'LKR ' + ${booking.roomPricePerNight}">LKR 12,000</span>/night</small>
+                                </div>
+                                <span class="fw-bold" th:text="'LKR ' + (${booking.roomPricePerNight} * ${booking.numberOfNights})">LKR 36,000</span>
+                            </div>
+
+                            <!-- Service Charge with Explanation -->
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <span>Service Charge <span class="badge bg-light text-dark ms-2">10% of Base</span></span>
+                                    <br/>
+                                    <small class="text-muted">Hotel service & amenities fee</small>
+                                </div>
+                                <span class="fw-bold text-warning" th:text="'LKR ' + ((${booking.roomPricePerNight} * ${booking.numberOfNights}) * 0.10)">LKR 3,600</span>
+                            </div>
+
+                            <!-- Taxes with Explanation -->
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <span>Government Tax <span class="badge bg-light text-dark ms-2">2% of Base</span></span>
+                                    <br/>
+                                    <small class="text-muted">Applicable government levies</small>
+                                </div>
+                                <span class="fw-bold text-info" th:text="'LKR ' + ((${booking.roomPricePerNight} * ${booking.numberOfNights}) * 0.02)">LKR 720</span>
+                            </div>
+
+                            <!-- Discount (if applicable) -->
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom" th:if="${booking.discountAmount != null && booking.discountAmount > 0}">
+                                <div>
+                                    <span class="text-success">Discount Applied</span>
+                                    <br/>
+                                    <small class="text-muted" th:if="${booking.promoCode != null}">Promo Code: <span th:text="${booking.promoCode}" class="fw-bold">SAVE10</span></small>
+                                </div>
+                                <span class="fw-bold text-success" th:text="'- LKR ' + ${booking.discountAmount}">- LKR 500</span>
+                            </div>
+
+                            <!-- Total Amount - Highlighted -->
+                            <div class="p-3 bg-dark rounded mb-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">Total Amount to Pay</h6>
+                                        <small class="text-muted">All charges included</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-golden fw-bold" style="font-size: 1.8rem;" th:text="'LKR ' + ${booking.totalAmount}">LKR 40,320</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Booking Status -->
+                            <div class="p-3 border-top">
+                                <h6 class="mb-3">Booking Status</h6>
+                                <div class="text-center">
+                                    <span class="badge bg-warning" th:if="${booking.bookingStatus.name() == 'PENDING_PAYMENT'}">
+                                        <i class="fas fa-clock me-1"></i>Pending Payment
+                                    </span>
+                                    <span class="badge bg-success" th:if="${booking.bookingStatus.name() == 'CONFIRMED'}">
+                                        <i class="fas fa-check-circle me-1"></i>Confirmed
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- No Booking Error -->
+    <section class="py-5" th:if="${booking == null}">
+        <div class="container">
+            <div class="alert alert-danger text-center">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Booking Not Found:</strong> Unable to load the booking details. Please try again.
+            </div>
+            <div class="text-center">
+                <a href="/my-bookings" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to My Bookings
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CSRF Token -->
+    <input type="hidden" id="csrfToken" th:value="${_csrf.token}">
+    <input type="hidden" id="bookingId" th:value="${booking != null ? booking.bookingId : ''}">
+
+    <script>
+        // Payment method selection
+        let selectedPaymentMethod = null;
+        let isCardFormVisible = false;
+        let isBankFormVisible = false;
+
+        function selectPaymentMethod(method) {
+            console.log('Selecting payment method:', method);
+            selectedPaymentMethod = method;
+            
+            // Update UI
+            const allMethods = document.querySelectorAll('.payment-method-card');
+            allMethods.forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            const selectedCard = document.querySelector(`[data-method="${method}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
             }
             
-            function setupCreditCardForm() {
-                const form = document.getElementById('creditCardPaymentForm');
-                if (!form) {
-                    console.error('Credit card form not found');
-                    return;
-                }
-                
-                const payBtn = document.getElementById('payNowBtn');
-                const termsCheckbox = document.getElementById('termsAccepted');
-                const cardholderName = document.getElementById('cardholderName');
-                const cardNumber = document.getElementById('cardNumber');
-                const expiryDate = document.getElementById('expiryDate');
-                const cvv = document.getElementById('cvv');
-                
-                // Add input formatting
-                const cardNumberInput = document.getElementById('cardNumber');
-                const expiryDateInput = document.getElementById('expiryDate');
-                const cvvInput = document.getElementById('cvv');
-                
-                // Format card number with spaces
-                cardNumberInput.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
-                    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || '';
-                    e.target.value = formattedValue;
-                    validateForm();
+            // Show/hide forms
+            const creditForm = document.getElementById('creditCardForm');
+            const bankForm = document.getElementById('bankTransferForm');
+            
+            if (creditForm) {
+                creditForm.style.display = method === 'CREDIT_CARD' ? 'block' : 'none';
+                isCardFormVisible = (method === 'CREDIT_CARD');
+            }
+            if (bankForm) {
+                bankForm.style.display = method === 'BANK_TRANSFER' ? 'block' : 'none';
+                isBankFormVisible = (method === 'BANK_TRANSFER');
+            }
+            
+            console.log('Payment method selected:', method);
+        }
+
+        // Success notification function
+        function showSuccessNotification(message) {
+            // Create a toast notification element
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 30px;
+                right: 30px;
+                background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                font-size: 16px;
+                font-weight: bold;
+                z-index: 9999;
+                animation: slideInRight 0.5s ease-out;
+            `;
+            
+            // Add animation
+            const style = document.createElement('style');
+            if (!document.getElementById('toast-animation')) {
+                style.id = 'toast-animation';
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from {
+                            transform: translateX(400px);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.5s ease-in reverse';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, payment page ready');
+            // Hide both forms by default - user must choose
+            const creditForm = document.getElementById('creditCardForm');
+            const bankForm = document.getElementById('bankTransferForm');
+            if (creditForm) creditForm.style.display = 'none';
+            if (bankForm) bankForm.style.display = 'none';
+            
+            // Add click listeners to payment method cards
+            const creditCard = document.querySelector('[data-method="CREDIT_CARD"]');
+            const bankCard = document.querySelector('[data-method="BANK_TRANSFER"]');
+            
+            if (creditCard) {
+                creditCard.style.cursor = 'pointer';
+                creditCard.addEventListener('click', function(e) {
+                    console.log('Credit card clicked');
+                    selectPaymentMethod('CREDIT_CARD');
+                    e.preventDefault();
+                    e.stopPropagation();
                 });
+            }
+            
+            if (bankCard) {
+                bankCard.style.cursor = 'pointer';
+                bankCard.addEventListener('click', function(e) {
+                    console.log('Bank card clicked');
+                    selectPaymentMethod('BANK_TRANSFER');
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
+            
+            // Setup file upload
+            setTimeout(function() {
+                setupFileUpload();
+            }, 100);
+        });
+
+        // File Upload Handler
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const receiptFile = document.getElementById('receiptFile');
+            
+            if (!uploadArea) return;
+
+            // Click to upload
+            uploadArea.addEventListener('click', function() {
+                receiptFile.click();
+            });
+
+            // File selection
+            receiptFile.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'rgba(255, 211, 0, 0.1)';
+                uploadArea.style.borderColor = '#ffd300';
+            });
+
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.style.backgroundColor = 'transparent';
+                uploadArea.style.borderColor = '#dee2e6';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'transparent';
+                uploadArea.style.borderColor = '#dee2e6';
                 
-                // Format expiry date with slash
-                expiryDateInput.addEventListener('input', function(e) {
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    receiptFile.files = e.dataTransfer.files;
+                    handleFileSelect(file);
+                }
+            });
+        }
+
+        function handleFileSelect(file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf'];
+            
+            if (file.size > maxSize) {
+                alert('File size exceeds 5MB limit');
+                return;
+            }
+            
+            if (!allowedTypes.includes(file.type)) {
+                alert('Please upload a valid image (PNG, JPG, GIF) or PDF file');
+                return;
+            }
+            
+            // Show file info
+            document.getElementById('fileInfo').style.display = 'block';
+            document.getElementById('fileName').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+            
+            // Update upload area styling
+            document.getElementById('uploadArea').style.borderColor = '#198754';
+            document.getElementById('uploadArea').style.backgroundColor = 'rgba(25, 135, 84, 0.05)';
+        }
+
+        // Process Credit Card Payment
+        function processPayment() {
+            console.log('=== PROCESS PAYMENT CALLED ===');
+            
+            // Get booking ID
+            const bookingId = document.getElementById('bookingId').value;
+            console.log('Booking ID:', bookingId);
+            
+            if (!bookingId) {
+                alert('Booking ID not found');
+                return;
+            }
+
+            // Show loading state
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+
+            // Prepare payment data - use default values if empty
+            const paymentData = {
+                bookingId: bookingId,
+                paymentMethod: 'CREDIT_CARD',
+                cardholderName: document.getElementById('cardholderName').value || 'Customer',
+                cardNumber: document.getElementById('cardNumber').value || '****',
+                expiryDate: document.getElementById('expiryDate').value || '**/**',
+                cvv: document.getElementById('cvv').value || '***'
+            };
+
+            console.log('Processing credit card payment with data:', paymentData);
+
+            // Send to backend
+            fetch('/api/payments/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.getElementById('csrfToken').value
+                },
+                body: JSON.stringify(paymentData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Payment processing failed with status ' + response.status);
+                }
+            })
+            .then(data => {
+                console.log('Payment successful:', data);
+                // Success - show custom success message
+                showSuccessNotification('Your room booking has been confirmed! Payment received successfully.');
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/payment-success?bookingId=' + bookingId;
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Payment failed: ' + error.message + '. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+                }
+            })
+            .then(data => {
+                console.log('Payment successful:', data);
+                // Success - show custom success message
+                showSuccessNotification('Your room booking has been confirmed! Payment received successfully.');
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/payment-success?bookingId=' + bookingId;
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Payment failed: ' + error.message + '. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // Process Bank Transfer
+        function processBankTransfer() {
+            // Simply check if the bank form is visible
+            const bankForm = document.getElementById('bankTransferForm');
+            
+            // If form is not visible or not found, user hasn't selected bank transfer
+            if (!bankForm) {
+                alert('Form elements not found');
+                return;
+            }
+            
+            const checkbox = document.getElementById('bankTermsAccepted');
+            const receiptFile = document.getElementById('receiptFile');
+            
+            if (!checkbox.checked) {
+                alert('Please confirm the information is correct.');
+                return;
+            }
+
+            if (!receiptFile.files || receiptFile.files.length === 0) {
+                alert('Please upload a payment receipt/screenshot.');
+                return;
+            }
+
+            // Show loading state
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading Receipt...';
+
+            // Create FormData to send file
+            const formData = new FormData();
+            formData.append('bookingId', document.getElementById('bookingId').value);
+            formData.append('paymentMethod', 'BANK_TRANSFER');
+            formData.append('receiptFile', receiptFile.files[0]);
+
+            // Send to backend
+            fetch('/api/payments/process-bank-transfer', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.getElementById('csrfToken').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Payment processing failed');
+                }
+            })
+            .then(data => {
+                // Success - redirect to pending confirmation page
+                window.location.href = '/payment-pending?bookingId=' + document.getElementById('bookingId').value;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Payment confirmation failed. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // Format card number input
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardNumberInput = document.getElementById('cardNumber');
+            if (cardNumberInput) {
+                cardNumberInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\s/g, '');
+                    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                    e.target.value = formattedValue;
+                });
+            }
+
+            const expiryInput = document.getElementById('expiryDate');
+            if (expiryInput) {
+                expiryInput.addEventListener('input', function(e) {
                     let value = e.target.value.replace(/\D/g, '');
                     if (value.length >= 2) {
-                        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                        value = value.slice(0, 2) + '/' + value.slice(2, 4);
                     }
                     e.target.value = value;
-                    validateForm();
-                });
-                
-                // Restrict CVV to numbers only
-                cvvInput.addEventListener('input', function(e) {
-                    e.target.value = e.target.value.replace(/\D/g, '');
-                    validateForm();
-                });
-                
-                // Add input event listeners to all form fields
-                cardholderName.addEventListener('input', validateForm);
-                termsCheckbox.addEventListener('change', validateForm);
-                
-                // Function to validate the entire form
-                function validateForm() {
-                    const isCardholderValid = cardholderName.value.trim().length >= 2;
-                    const isCardNumberValid = cardNumber.value.replace(/\s/g, '').length >= 13;
-                    const isExpiryValid = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiryDate.value);
-                    const isCvvValid = /^\d{3,4}$/.test(cvv.value);
-                    const isTermsAccepted = termsCheckbox.checked;
-                    
-                    const isFormValid = isCardholderValid && isCardNumberValid && isExpiryValid && isCvvValid && isTermsAccepted;
-                    
-                    payBtn.disabled = !isFormValid;
-                    
-                    console.log('Form validation:', {
-                        isCardholderValid,
-                        isCardNumberValid,
-                        isExpiryValid,
-                        isCvvValid,
-                        isTermsAccepted,
-                        isFormValid
-                    });
-                }
-                
-                // Initial validation check
-                validateForm();
-                
-                // Handle form submission
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    if (form.checkValidity() && termsCheckbox.checked) {
-                        processCustomPayment();
-                    } else {
-                        form.classList.add('was-validated');
-                    }
                 });
             }
-            
-            function processCustomPayment() {
-                const form = document.getElementById('creditCardPaymentForm');
-                const formData = new FormData(form);
-                
-                const paymentData = {
-                    bookingReference: currentBookingData.bookingReference,
-                    cardNumber: formData.get('cardNumber'),
-                    expiryDate: formData.get('expiryDate'),
-                    cvv: formData.get('cvv'),
-                    cardholderName: formData.get('cardholderName'),
-                    amount: currentBookingData.totalAmount
-                };
-                
-                // Show loading
-                document.getElementById('paymentProgress').style.display = 'block';
-                document.getElementById('payNowBtn').disabled = true;
-                
-                fetch('/api/custom-payment/process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value || ''
-                    },
-                    body: JSON.stringify(paymentData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('paymentProgress').style.display = 'none';
-                    
-                    if (data.success) {
-                        showAlert('Payment successful! Redirecting to confirmation...', 'success');
-                        setTimeout(() => {
-                            window.location.href = '/payment/success?order_id=' + data.bookingReference;
-                        }, 2000);
-                    } else {
-                        showAlert(data.error || 'Payment failed. Please try again.', 'error');
-                        document.getElementById('payNowBtn').disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Payment error:', error);
-                    document.getElementById('paymentProgress').style.display = 'none';
-                    document.getElementById('payNowBtn').disabled = false;
-                    showAlert('Payment processing failed. Please try again.', 'error');
-                });
-            }
-            
-            function confirmBankTransfer() {
-                if (confirm('Please confirm that you will transfer the payment and send proof to our email. Your booking will be on hold until payment is verified.')) {
-                    processAlternativePayment('BANK_TRANSFER');
-                }
-            }
-            
-            function confirmCashPayment() {
-                if (confirm('Please confirm that you will pay at the hotel during check-in. Your booking will be held for 24 hours from your arrival time.')) {
-                    processAlternativePayment('CASH');
-                }
-            }
-            
-            function processAlternativePayment(paymentMethod) {
-                showLoading('Processing your booking...');
-                
-                fetch('/api/payment/alternative', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value || ''
-                    },
-                    body: JSON.stringify({
-                        bookingId: currentBookingData.bookingId,
-                        paymentMethod: paymentMethod
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    hideLoading();
-                    if (data.success) {
-                        showAlert('Booking confirmed! You will receive a confirmation email shortly.', 'success');
-                        setTimeout(() => {
-                            window.location.href = '/booking/confirmation?bookingId=' + currentBookingData.bookingId;
-                        }, 2000);
-                    } else {
-                        showAlert(data.error || 'Error processing payment. Please try again.', 'error');
-                    }
-                })
-                .catch(error => {
-                    hideLoading();
-                    console.error('Payment processing error:', error);
-                    showAlert('Error processing payment. Please try again.', 'error');
-                });
-            }
-            
-            // Custom payment form is handled in setupCreditCardForm function
-            
-            function formatCurrency(amount) {
-                return `LKR ${amount.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            }
-            
-            // Test payment function removed - custom payment system handles validation internally
-            
-            function formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-            
-            function formatDateShort(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-            
-            // Debug function - can be called from browser console
-            window.testBookingAPI = function(bookingId) {
-                console.log('=== TESTING BOOKING API ===');
-                console.log('Testing with booking ID:', bookingId);
-                fetch(`/api/bookings/${bookingId}`)
-                    .then(response => {
-                        console.log('Response status:', response.status);
-                        console.log('Response ok:', response.ok);
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Success! Booking data:', data);
-                        return data;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        throw error;
-                    });
-            };
-            
-            // Log the test function availability
-            console.log('💡 Debug function available: window.testBookingAPI(bookingId)');
-            console.log('Example: window.testBookingAPI(21)');
-        </script>
-    </th:block>
-    
-    <!-- Additional CSS for payment page -->
-    <th:block th:fragment="additional-css">
-        <style>
-            .payment-method-card {
-                cursor: pointer;
-                transition: all 0.3s ease;
-                padding: 2rem 1.5rem;
-                border: 2px solid #dee2e6;
-                border-radius: 12px;
-                background: #ffffff;
-                text-align: center;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
+        });
+    </script>
 
-            .payment-method-icon {
-                width: 70px;
-                height: 70px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 1.25rem;
-                transition: all 0.3s ease;
-            }
+    <style>
+        /* Payment Method Cards */
+        .payment-method-card {
+            border: 2px solid var(--border-secondary);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--bg-card);
+        }
 
-            .payment-method-icon i {
-                font-size: 2rem;
-                color: #666;
-                transition: all 0.3s ease;
-            }
+        .payment-method-card:hover {
+            border-color: var(--accent-primary);
+            background-color: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
 
-            .payment-method-card h4 {
-                margin-bottom: 0.75rem;
-                color: #333;
-                font-size: 1.1rem;
-                font-weight: 600;
-            }
+        .payment-method-card.selected {
+            border-color: var(--accent-primary);
+            background-color: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
 
-            .payment-method-card p {
-                margin-bottom: 0.5rem;
-                color: #666;
-                font-size: 0.95rem;
-            }
+        /* Form Controls */
+        .form-control {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-secondary);
+            color: var(--text-primary);
+        }
 
-            .payment-method-card small {
-                color: #999;
-                font-size: 0.85rem;
-                display: block;
-            }
+        .form-control:focus {
+            background-color: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
 
-            .payment-method-card:hover {
-                background: #f8f9fa;
-                border-color: #ffd700;
-                transform: translateY(-4px);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            }
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
 
-            .payment-method-card:hover .payment-method-icon {
-                background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
-                transform: scale(1.1);
-            }
+        /* Golden Button */
+        .btn-golden {
+            background: var(--gradient-primary);
+            border: none;
+            color: #000;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
 
-            .payment-method-card:hover .payment-method-icon i {
-                color: #d4af37;
-            }
+        .btn-golden:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
 
-            .payment-method-card.selected {
-                background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
-                border-color: #ffd700;
-                box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
-                border-width: 3px;
-            }
+        .btn-golden:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
-            .payment-method-card.selected .payment-method-icon {
-                background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
-                box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        /* Animation for fade-in-up */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-
-            .payment-method-card.selected .payment-method-icon i {
-                color: #ffffff;
-            }
-
-            .payment-method-card.selected h4 {
-                color: #d4af37;
-                font-weight: 700;
-            }
-
-            .payment-method-card.selected p {
-                color: #555;
-            }
-
-            .payment-method-card.selected small {
-                color: #777;
-            }
-
-            .summary-section {
-                margin-bottom: 1.5rem;
-                padding-bottom: 1rem;
-                border-bottom: 1px solid #e0e0e0;
-            }
-
-            .summary-section:last-of-type {
-                border-bottom: none;
-            }
-
-            .summary-section h4 {
-                font-size: 1rem;
-                margin-bottom: 1rem;
-                color: #333;
-            }
-            
-            /* Payment Process Button Styles */
-            .btn-payment-process {
-                position: relative;
-                overflow: hidden;
-                background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-                color: #ffffff;
-                font-weight: 700;
-                font-size: 1.1rem;
-                padding: 1rem 2rem;
-                border: none;
-                border-radius: 12px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                opacity: 0.6;
-                cursor: not-allowed;
-            }
-            
-            .btn-payment-process:disabled {
-                background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-                opacity: 0.6;
-                cursor: not-allowed;
-            }
-            
-            .btn-payment-process:not(:disabled) {
-                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-                color: #ffffff;
+            to {
                 opacity: 1;
-                cursor: pointer;
-                box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4), 
-                            0 0 30px rgba(34, 197, 94, 0.2);
-                animation: buttonPulse 2s ease-in-out infinite;
+                transform: translateY(0);
             }
-            
-            .btn-payment-process:not(:disabled)::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, 
-                    transparent, 
-                    rgba(255, 255, 255, 0.3), 
-                    transparent);
-                transition: left 0.6s ease;
-            }
-            
-            .btn-payment-process:not(:disabled):hover {
-                transform: translateY(-2px) scale(1.02);
-                box-shadow: 0 12px 30px rgba(34, 197, 94, 0.5), 
-                            0 0 50px rgba(34, 197, 94, 0.3);
-            }
-            
-            .btn-payment-process:not(:disabled):hover::before {
-                left: 100%;
-            }
-            
-            @keyframes buttonPulse {
-                0%, 100% {
-                    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4), 
-                                0 0 30px rgba(34, 197, 94, 0.2);
-                }
-                50% {
-                    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.6), 
-                                0 0 40px rgba(34, 197, 94, 0.4);
-                }
-            }
-        </style>
+        }
 
-            .summary-item {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 0.75rem;
-                color: #555;
-            }
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
+</div>
 
-            .summary-item span:first-child {
-                color: #666;
-            }
+<!-- Additional JavaScript Fragment -->
+<th:block th:fragment="additional-js">
+    <script>
+        // Payment page specific scripts
+        console.log('Payment page loaded');
+    </script>
+</th:block>
 
-            .summary-item span:last-child {
-                font-weight: 500;
-                color: #333;
-            }
-
-            .total-amount {
-                background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
-                padding: 1rem;
-                border-radius: 8px;
-                margin-top: 1rem;
-                margin-bottom: 1rem;
-            }
-
-            .total-amount .summary-item span {
-                font-size: 1.2rem;
-                font-weight: bold;
-                color: #d4af37;
-            }
-
-            .sticky-top {
-                top: 2rem;
-            }
-        </style>
-    </th:block>
 </body>
 </html>
