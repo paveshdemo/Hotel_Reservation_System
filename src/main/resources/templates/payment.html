@@ -203,7 +203,7 @@
                                         </div>
 
                                         <div class="col-12">
-                                            <button type="button" class="btn btn-golden w-100 py-3" onclick="processPayment()">
+                                            <button type="button" class="btn btn-golden w-100 py-3" onclick="processCardPayment()">
                                                 <i class="fas fa-lock me-2"></i>Pay Now - <span th:text="'LKR ' + ${booking.totalAmount}">LKR 5,000</span>
                                             </button>
                                         </div>
@@ -527,11 +527,14 @@
                     e.stopPropagation();
                 });
             }
-            
+
             // Setup file upload
             setTimeout(function() {
                 setupFileUpload();
             }, 100);
+
+            // Default to credit card selection to avoid conflicts with global scripts
+            selectPaymentMethod('CREDIT_CARD');
         });
 
         // File Upload Handler
@@ -602,7 +605,7 @@
         }
 
         // Process Credit Card Payment
-        function processPayment() {
+        function processCardPayment() {
             console.log('=== PROCESS PAYMENT CALLED ===');
             
             // Get booking ID
@@ -647,24 +650,6 @@
                     return response.json();
                 } else {
                     throw new Error('Payment processing failed with status ' + response.status);
-                }
-            })
-            .then(data => {
-                console.log('Payment successful:', data);
-                // Success - show custom success message
-                showSuccessNotification('Your room booking has been confirmed! Payment received successfully.');
-                // Redirect after 2 seconds
-                setTimeout(() => {
-                    window.location.href = '/payment-success?bookingId=' + bookingId;
-                }, 2000);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Payment failed: ' + error.message + '. Please try again.');
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            });
-        }
                 }
             })
             .then(data => {
